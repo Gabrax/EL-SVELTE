@@ -4,7 +4,7 @@ project(Data_Structures_and_Algorithms)
 set(CMAKE_CXX_STANDARD 17)
 
 add_executable(DSA DataStructures/Arrays.cpp
-        DataStructures/Linked_Lists.cpp
+        DataStructures/Singular_Linked_Lists.cpp
         DataStructures/Stack.cpp
         DataStructures/Queue.cpp
         DataStructures/Tree.cpp
@@ -15,4 +15,7 @@ add_executable(DSA DataStructures/Arrays.cpp
         Algorithms/Sorting.cpp
         Algorithms/Searching.cpp
         Algorithms/Hashing.cpp
+        DataStructures/Vector.cpp
+        DataStructures/Doubly_Linked_Lists.cpp
+        DataStructures/Circular_Linked_LIsts.cpp
 )

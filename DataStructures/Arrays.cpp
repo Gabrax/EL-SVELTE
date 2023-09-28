@@ -1,100 +1,50 @@
-/*#include <iostream>
-#include <cstdio>
-#include <cmath>
-#include <string>
-#include "hehe.h"
-#include "Rekurencja.h"
-#include "Stacks.h"
-#include "Queue.h"
-#include "LinkedLists.h"
+#include <iostream>
 
-#define LOG(x) std::cout << x << '\n';
+//In C++, an array is a collection of elements of the same data type stored in contiguous memory locations.
+// Arrays are one of the fundamental data structures in C++ and provide a way
+// to store and access multiple values of the same type under a single variable name.
 
-int main() {
-    Write("siema");
-    LOG("hello");
-    int a = 5;
-    int b = 6;
-    int sum;
-    if(a < b)
-    {
-        sum = a + b;
-    }
-    std::cout << sum << std::endl;
-
-
-    int var = 8;
-    void* ptr = &var;
-
-    int liczba = 123;
-    printf( "%i\n", sizeof(liczba) ); //pokazuje rozmiar którą zajmuje w pamięci
-
-
-
-
-    Entity entity;
-    entity.SetLevel(entity.EntityLevelWarning);
-    entity.Error("error");
-    entity.Warn("warning");
-    entity.Info("info");
-
-    int sumOfnumbers = recursiveSum(3);
-    int sumofevenSquares = evenSquares(5);
-    int sumofevenSquares2 = evenSquares2(2);
-    int nthFibnumber = fibNumber(9);
-    std::string hello = "hello";
-    char substring = 'e';
-    bool containsstring = linear(hello, substring, hello.length()-1);
-
-    std::cout << "sum: " << sumOfnumbers << std::endl;
-
-class Stack d;
-d.push(2);
-d.push(3);
-d.push(5);
-int elementsPoped = d.pop();
-
-std::cout << elementsPoped << std::endl;
-
-class Queue q;
-q.deQueue();
-q.enQueue(1);
-q.enQueue(2);
-q.enQueue(3);
-q.enQueue(4);
-q.enQueue(5);
-
-q.deQueue();
-q.display();
-
-// linked list
-Node* head;
-Node* one = NULL;
-Node* two = NULL;
-Node* three = NULL;
-
-// allocate 3 nodes in the heap
-one = new Node();
-two = new Node();
-three = new Node();
-
-// assign value values
-one -> value =1;
-two -> value =2;
-three -> value =3;
-
-// assign value values
-one -> next =two;
-two -> next =three;
-three -> next =NULL;
-
-// print the linked list value
-head = one;
-while(head != NULL)
+int main()
 {
-    std::cout << "head value" << head->value << std::endl;
-    head = head ->next;
-}
+    // Declaring an Array:
+    int myArray[5];
+    //Initializing an Array:
 
-    std::cin.get();
+    ///Static Initialization: Initialize the array when declaring it.
+    int myArray[5] = {1, 2, 3, 4, 5};
+    ///Dynamic Initialization: Initialize the array later in your code.
+    int myArray[5];
+    myArray[0] = 1;
+    myArray[1] = 2;
+    myArray[2] = 3;
+    myArray[3] = 4;
+    myArray[4] = 5;
+    ///Partial Initialization: You can initialize only some elements of the array,
+    /// and the rest will be set to default values (0 for integers).
+    int myArray[5] = {1, 2}; // Initializes the first two elements to 1 and 2, and the rest to 0.
+    //Accessing Array Elements:
+    int value = myArray[2]; // Accesses the third element (index 2) of the array.
+    //Array Size:
+    int size = sizeof(myArray) / sizeof(myArray[0]);
+// OR
+    int size = std::size(myArray); // C++17 and later
+    //Array Iteration:
+    for (int i = 0; i<10;i++)
+    {
+        std::cout << myArray[i] << '\n';
+    }
+    for(int x : arr)
+    {
+        std::cout << x << '\n';
+    }
+    for (const auto &var : arr)
+    {
+        std::cout << var << '\n';
+    }
+    //Multidimensional Arrays:
+    int matrix[3][3] = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+
+
+
+
 }
