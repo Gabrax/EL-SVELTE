@@ -1,8 +1,0 @@
-#ifndef UNTITLED_HASH_TABLE_H
-#define UNTITLED_HASH_TABLE_H
-
-
-
-
-
-#endif //UNTITLED_HASH_TABLE_H

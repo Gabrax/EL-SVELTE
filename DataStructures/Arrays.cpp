@@ -1,4 +1,4 @@
-#include <iostream>
+/*#include <iostream>
 #include <cstdio>
 #include <cmath>
 #include <string>
@@ -8,9 +8,11 @@
 #include "Queue.h"
 #include "LinkedLists.h"
 
+#define LOG(x) std::cout << x << '\n';
 
 int main() {
     Write("siema");
+    LOG("hello");
     int a = 5;
     int b = 6;
     int sum;
