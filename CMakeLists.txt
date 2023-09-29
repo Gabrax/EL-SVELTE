@@ -18,4 +18,7 @@ add_executable(DSA DataStructures/Arrays.cpp
         DataStructures/Vector.cpp
         DataStructures/Doubly_Linked_Lists.cpp
         DataStructures/Circular_Linked_LIsts.cpp
+        Algorithms/Breadth_First_Search.cpp
+        Algorithms/Binary_Search_Tree.cpp
+        DataStructures/Heap-PriorityQueue.cpp
 )
