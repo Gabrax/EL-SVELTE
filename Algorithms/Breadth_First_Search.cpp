@@ -20,6 +20,7 @@
 //
 //The process continues until the queue is empty.
 
+using namespace std;
 
 class Graph {
 public:
