@@ -33,6 +33,28 @@ bool Binary_Search(std::vector<int> arr, int number)
 
 
 
+int Rec_BinSearch(std::vector<int> arr, int lo, int hi)
+{
+    if(lo == hi)
+    {
+        return arr[lo];
+    }
+
+    int mid = (lo + hi)/2;
+
+    if(arr[mid] < arr[mid + 1]) // change to ">" to search for smallest value
+    {
+        return Rec_BinSearch(arr, mid+1,hi);
+    }
+    else
+    {
+        return Rec_BinSearch(arr,lo,mid);
+    }
+
+}
+
+
+
 int main()
 {
 
@@ -71,6 +93,10 @@ else
     std::cout << "NOT FOUND" << '\n';
 }
 
+//Recursive Binary Search
+int result = Rec_BinSearch(arr,0,arr.size()-1); // it doesnt have to be sorted
+
+std::cout << "Highest number " << result << '\n';
 
 
 std::cin.get();
