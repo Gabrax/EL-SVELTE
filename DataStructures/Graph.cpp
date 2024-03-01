@@ -33,7 +33,7 @@ std::vector<Edge> edgeList;
 class Graph {
 private:
     int V;
-    std::vector<vector<int>> adj;
+    std::vector<std::vector<int>> adj;
 
 public:
     Graph(int vertices);
