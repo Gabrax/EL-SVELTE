@@ -1,2 +1,9 @@
 # Project exclude paths
 /cmake-build-debug/
+
+# Ignore files 
+*.class
+*.exe
+
+# Ignore dir
+.vscode/
