@@ -18,7 +18,7 @@ int partition(int arr[],int low,int high)
       //Increment index of smaller element
       i++;
       swap(arr[i],arr[j]);
-    }
+      }
   }
   swap(arr[i+1],arr[high]);
   return (i+1);
@@ -55,5 +55,8 @@ int main() {
   {
     cout<<arr[i]<<" ";
   }
+
+
+
   return 0;
 }

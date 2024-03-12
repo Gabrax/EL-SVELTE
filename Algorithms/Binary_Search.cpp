@@ -13,10 +13,10 @@ bool Binary_Search(std::vector<int> arr, int number)
         const int midpoint = floor(low + (high - low) / 2);
         const int v = arr[midpoint];
 
-        if(v == number)
+        if(v == number) 
         {
             return true;
-        }
+        } 
         else if (v > number)
         {
             high = midpoint;
