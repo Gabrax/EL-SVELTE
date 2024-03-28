@@ -13,12 +13,12 @@
 // This randomization helps ensure that the algorithm's performance is less predictable, which is often a desirable property in practice.
 
 // Function to partition the array using a random pivot element
-int partition(vector<int>& arr, int low, int high) {
+int partition(std::vector<int>& arr, int low, int high) {
     // Generate a random index between low and high
     int randomIndex = low + rand() % (high - low + 1);
 
     // Swap the pivot element (chosen randomly) with the last element
-    swap(arr[randomIndex], arr[high]);
+    std::swap(arr[randomIndex], arr[high]);
 
     int pivot = arr[high];
     int i = low - 1;
@@ -26,16 +26,16 @@ int partition(vector<int>& arr, int low, int high) {
     for (int j = low; j <= high - 1; j++) {
         if (arr[j] <= pivot) {
             i++;
-            swap(arr[i], arr[j]);
+            std::swap(arr[i], arr[j]);
         }
     }
 
-    swap(arr[i + 1], arr[high]);
+    std::swap(arr[i + 1], arr[high]);
     return i + 1;
 }
 
 // Randomized QuickSort algorithm
-void randomizedQuickSort(vector<int>& arr, int low, int high) {
+void randomizedQuickSort(std::vector<int>& arr, int low, int high) {
     if (low < high) {
         int pivotIndex = partition(arr, low, high);
 
@@ -48,19 +48,19 @@ int main() {
     // Seed the random number generator
     srand(time(0));
 
-    vector<int> arr = {12, 4, 5, 6, 7, 3, 1, 15};
+    std::vector<int> arr = {12, 4, 5, 6, 7, 3, 1, 15};
     int n = arr.size();
 
-    cout << "Original array: ";
+    std::cout << "Original array: ";
     for (int i = 0; i < n; i++) {
-        cout << arr[i] << " ";
+        std::cout << arr[i] << " ";
     }
 
     randomizedQuickSort(arr, 0, n - 1);
 
-    cout << "\nSorted array: ";
+    std::cout << "\nSorted array: ";
     for (int i = 0; i < n; i++) {
-        cout << arr[i] << " ";
+        std::cout << arr[i] << " ";
     }
 
     return 0;
