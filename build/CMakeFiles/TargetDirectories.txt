@@ -1,0 +1,3 @@
+C:/Users/gab-o/Documents/GitHub/Data-Structures-and-Algorithms/build/CMakeFiles/DSA.dir
+C:/Users/gab-o/Documents/GitHub/Data-Structures-and-Algorithms/build/CMakeFiles/edit_cache.dir
+C:/Users/gab-o/Documents/GitHub/Data-Structures-and-Algorithms/build/CMakeFiles/rebuild_cache.dir
