@@ -13,8 +13,7 @@
 //The insert function is used to insert values into the BST.
 //The inorder function is used to perform an inorder traversal of the BST, which prints the elements in sorted order.
 
-class TreeNode {
-public:
+struct TreeNode {
     int data;
     TreeNode* left;
     TreeNode* right;
@@ -26,11 +25,8 @@ public:
     }
 };
 
-class BinarySearchTree {
-private:
-    TreeNode* root;
-
-public:
+struct BinarySearchTree {
+  public:
     BinarySearchTree() {
         root = nullptr;
     }
@@ -69,12 +65,16 @@ public:
             inorderRec(root->right);
         }
     }
+
+  private:
+    TreeNode* root;
+
 };
 
 int main() {
     BinarySearchTree bst;
 
-    // Insert values into the BST
+    // Insert values into the tree
     bst.insert(50);
     bst.insert(30);
     bst.insert(70);
@@ -86,7 +86,5 @@ int main() {
     // Perform an inorder traversal to print the elements in sorted order
     std::cout << "Inorder traversal: ";
     bst.inorder();
-    std::cout << std::endl;
-
-    return 0;
+    std::cout << '\n';
 }
