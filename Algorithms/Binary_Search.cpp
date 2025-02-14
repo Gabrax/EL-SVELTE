@@ -3,37 +3,23 @@
 #include <cmath>
 #include <algorithm>
 
-bool Binary_Search(std::vector<int> arr, int number)
+constexpr bool Binary_Search(const std::vector<int>& arr, int target)
 {
- int low = 0;
- int high = arr.size();
+    int low = 0;
+    int high = arr.size()-1;
 
-    while( low < high)
+    while(low < high)
     {
-        const int midpoint = floor(low + (high - low) / 2);
-        const int v = arr[midpoint];
+        const int midpoint = low + ((high - low) / 2);
 
-        if(v == number) 
-        {
-            return true;
-        } 
-        else if (v > number)
-        {
-            high = midpoint;
-        }
-        else
-        {
-            low = midpoint + 1;
-        }
+        if(arr[midpoint] == target) return true;
+        else if (arr[midpoint] > target) high = midpoint;
+        else low = midpoint + 1;
     }
     return false;
-
 }
 
-
-
-
-int Rec_BinSearch(std::vector<int> arr, int lo, int hi)
+constexpr int Rec_BinSearch(const std::vector<int>& arr, int lo, int hi)
 {
     if(lo == hi)
     {
@@ -58,46 +44,12 @@ int Rec_BinSearch(std::vector<int> arr, int lo, int hi)
 int main()
 {
 
+  std::vector<int> arr = {4,2,3,1,5,25};
 
-std::vector<int> arr;
+  std::sort(arr.begin(), arr.end());
 
-std::cout << "Enter the size of array: " << '\n';
+  std::cout << Binary_Search(arr, 5) << '\n';
 
-int k;
-std::cin >> k;
-
-std::cout << "Enter the numbers " << '\n';
-
-for( int i = 0; i < k; i++)
-{
-    int n;
-    std::cin >> n;
-    arr.push_back(n);
-}
-
-// in Binary_Search, array/vector has to be sorted
-std::sort(arr.begin(), arr.end());
-
-std::cout << "Search for a number: " << '\n';
-int l;
-std::cin >> l;
-
-bool res = Binary_Search(arr, l);
-
-if(res == true)
-{
-    std::cout << "FOUND" << '\n';
-}
-else
-{
-    std::cout << "NOT FOUND" << '\n';
-}
-
-//Recursive Binary Search
-int result = Rec_BinSearch(arr,0,arr.size()-1); // it doesnt have to be sorted
-
-std::cout << "Highest number " << result << '\n';
-
-
-std::cin.get();
+  //Recursive Binary Search
+  std::cout << Rec_BinSearch(arr,0,arr.size()-1); 
 }
