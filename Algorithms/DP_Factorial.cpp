@@ -1,10 +1,10 @@
 #include <iostream>
 #include <vector>
 
-// Memoization array (initialized with -1)
-std::vector<unsigned long long> memo(100, -1);
 
 unsigned long long Memoizationfactorial(int n) {
+    // Memoization array (initialized with -1)
+    std::vector<unsigned long long> memo(100, -1);
     // Base case
     if (n == 0 || n == 1) {
         return 1;

@@ -1,108 +1,74 @@
 #include <iostream>
-#include <string>
-#include <vector>
-#include <algorithm>
-#include <unordered_map>
-#include <map>
-#include <unordered_set>
-#include <set>
-#include <stack>
-#include <queue>
-#include <cctype>
 #include <memory>
 
-/*struct Node{
-    int value;
-    Node* next;
-};*/
+class Node {
+public:
+    int data;
+    std::shared_ptr<Node> next;
 
-struct Node {
-    int value;
-    std::unique_ptr<Node> next; // Using unique_ptr for ownership management
+    Node(int value) : data(value), next(nullptr) {}
 };
 
-struct Node2 {
-    int value;
-    std::shared_ptr<Node2> next; // Using shared_ptr for shared ownership
-};
+// Define a LinkedList class to manage the list
+class LinkedList {
+private:
+    std::shared_ptr<Node> head; // Pointer to the first node in the list
 
+public:
+    LinkedList() : head(nullptr) {}
 
-
-int main(){
-    std::ios::sync_with_stdio(0);
-    std::cin.tie(0);
-
-    /*Node* head;
-    Node* one;
-    Node* two;
-    Node* three;
-
-    one = new Node();
-    two = new Node();
-    three = new Node();
-
-    
-
-    one->value = 1;
-    two->value = 2;
-    three->value = 3;
-
-    one->next = two;
-    two->next = three;
-    three->next = NULL;
-
-    head = one;
-    while(head!=NULL){
-        std::cout << head->value;
-        head = head->next;
-    }*/
-
-    /*std::unique_ptr<Node> head = std::make_unique<Node>();
-    std::unique_ptr<Node> one = std::make_unique<Node>();
-    std::unique_ptr<Node> two = std::make_unique<Node>();
-    std::unique_ptr<Node> three = std::make_unique<Node>();
-
-    // Assigning values
-    head->value = 0; // Dummy value for head
-    one->value = 1;
-    two->value = 2;
-    three->value = 3;
-
-    // Linking nodes
-    head->next = std::move(one);
-    head->next->next = std::move(two);
-    head->next->next->next = std::move(three);
-
-    // Traversing and printing the linked list
-    Node* current = head.get(); // get raw pointer
-    while (current != nullptr) {
-        std::cout << current->value << " ";
-        current = current->next.get(); // get raw pointer from the unique_ptr
-    }*/
-    
-    std::shared_ptr<Node2> head = std::make_shared<Node2>();
-    std::shared_ptr<Node2> one = std::make_shared<Node2>();
-    std::shared_ptr<Node2> two = std::make_shared<Node2>();
-    std::shared_ptr<Node2> three = std::make_shared<Node2>();
-
-    // Assigning values
-    head->value = 0; // Dummy value for head
-    one->value = 1;
-    two->value = 2;
-    three->value = 3;
-
-    // Linking nodes
-    head->next = one;
-    one->next = two;
-    two->next = three;
-
-    // Traversing and printing the linked list
-    std::shared_ptr<Node2> current = head; // Copy head, shared ownership
-    while (current != nullptr) {
-        std::cout << current->value << " ";
-        current = current->next; // Automatic shared ownership, no need for get()
+    // Function to insert a new node at the beginning of the list
+    void insertAtBeginning(int value) {
+        std::shared_ptr<Node> newNode = std::make_shared<Node>(value);
+        newNode->next = head;
+        head = newNode;
     }
 
+    // Function to display the elements of the list
+    void display() {
+        std::shared_ptr<Node> current = head;
+        while (current != nullptr) {
+            std::cout << current->data << " -> ";
+            current = current->next;
+        }
+        std::cout << "nullptr" << std::endl;
+    }
+
+    // Function to delete a node by its value
+    void deleteNode(int value) {
+        if (head == nullptr)
+            return; // List is empty
+
+        if (head->data == value) {
+            head = head->next;
+            return;
+        }
+
+        std::shared_ptr<Node> current = head;
+        while (current->next != nullptr) {
+            if (current->next->data == value) {
+                current->next = current->next->next;
+                return;
+            }
+            current = current->next;
+        }
+    }
+};
+
+int main()
+{
+    LinkedList myList;
+
+    myList.insertAtBeginning(5);
+    myList.insertAtBeginning(10);
+    myList.insertAtBeginning(15);
+    myList.insertAtBeginning(20);
+
+    myList.display(); // Display the list: 20 -> 15 -> 10 -> 5 -> nullptr
+
+    myList.deleteNode(10);
+
+    myList.display(); // Display the list after deleting 10: 20 -> 15 -> 5 -> nullptr
 
     return 0;
 }
