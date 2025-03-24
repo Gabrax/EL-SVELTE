@@ -16,7 +16,7 @@
         }
 
         if(event === "SIGNED_OUT") {
-            await goto("login");
+            await goto("/");
             invalidateAll();
         }
     })
@@ -28,21 +28,23 @@
     <div class="navbar max-w-3xl mx-auto justify-between">
         <!--left side of navbar-->
         <div>
-            <a href="/" class="btn btn-ghost text-xl">Svelte Calendar</a>
-            {#if session !== null}
-                <a href="/{session.user.email}" class="btn btn-ghost">My Events</a>
-            {/if}
+            <div>
+                {#if session == null}
+                    <a class="btn btn-ghost text-xl">Svelte Calendar</a>
+                {:else}
+                    <a href="/events" class="btn btn-ghost text-xl">Svelte Calendar</a>
+                    <a href="/calendar" class="btn btn-ghost">My Events</a>
+                {/if}
+            </div>
         </div>
         <!--right side of navbar-->
         <div>
             {#if session == null}
-                <button on:click={() => goto("/login")}>Login</button>
+                
             {:else}
                 <span class="text-white text-lg ml-2">{session.user.email}</span>
                 <button class="ml-2" on:click={async () => { await supabase.auth.signOut()}}>Logout</button>
             {/if}
-            
-            
         </div>
     </div>
 </div>
