@@ -27,6 +27,7 @@
                         input: "width: 400px;"
                     }
                 }}
+                providers={[ 'facebook', 'twitter']}
             />
         </div>
     </div>
