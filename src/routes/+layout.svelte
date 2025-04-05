@@ -2,51 +2,61 @@
     export let data;
     import "../app.pcss";
     import { goto, invalidateAll } from "$app/navigation";
-    import { Auth } from '@supabase/auth-ui-svelte';
-    import { ThemeSupa } from '@supabase/auth-ui-shared';
+    import { page } from "$app/stores";
+    import '@fortawesome/fontawesome-free/css/all.css';
+    import '@fortawesome/fontawesome-free/js/all.js';
+    
 
-    let { supabase, session } = data
-    $: ({ supabase, session } = data)
-
-    // session is null, if session is null we have no user. if its not null, we have a user
-
+  
+    let { supabase, session } = data;
+    $: ({ supabase, session } = data);
+  
+    function handleLogout() {
+      supabase.auth.signOut();
+    }
+  
+    // Obsługa zmiany stanu autoryzacji
     supabase.auth.onAuthStateChange(async (event, session) => {
-        if(event === "SIGNED_IN") {
-            invalidateAll();
-        }
-
-        if(event === "SIGNED_OUT") {
-            await goto("/");
-            invalidateAll();
-        }
-    })
-
-</script>
-
-<!-- Navbar -->
-<div class="bg-base-100 justify-between fixed top-0 left-0 right-0">
-    <div class="navbar max-w-3xl mx-auto justify-between">
-        <!--left side of navbar-->
-        <div>
-            <div>
-                {#if session == null}
-                    <a class="btn btn-ghost text-xl">Svelte Calendar</a>
-                {:else}
-                    <a href="/events" class="btn btn-ghost text-xl">Svelte Calendar</a>
-                    <a href="/calendar" class="btn btn-ghost">My Events</a>
-                {/if}
-            </div>
-        </div>
-        <!--right side of navbar-->
-        <div>
-            {#if session == null}
-                
-            {:else}
-                <span class="text-white text-lg ml-2">{session.user.email}</span>
-                <button class="ml-2" on:click={async () => { await supabase.auth.signOut()}}>Logout</button>
-            {/if}
-        </div>
+      if (event === "SIGNED_IN") {
+        invalidateAll();
+      }
+  
+      if (event === "SIGNED_OUT") {
+        await goto("/");
+        invalidateAll();
+      }
+    });
+  
+    // Pobierz aktualną ścieżkę URL
+    $: currentPath = $page?.url?.pathname || '';
+  </script>
+  
+  {#if currentPath !== '/'}
+  <nav class="bg-gradient-to-r from-[#0f172a] to-[#111827] fixed top-0 left-0 right-0 border-b border-pink-500 z-10">
+    <div class="navbar max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
+      <!-- Left side of navbar -->
+      <div class="flex items-center space-x-4">
+        <a href="/events" class="text-pink-400 text-xl font-bold hover:text-pink-300 transition">Svelte Calendar</a>
+        <a href="/calendar" class="text-white text-lg hover:text-pink-400 transition">My Events</a>
+      </div>
+  
+      <!-- Right side of navbar -->
+      <div class="flex items-center space-x-4">
+        <span class="text-white text-lg">{session?.user.email}</span>
+        <button 
+          class="p-2 rounded-full bg-gray-700 hover:bg-gray-600 focus:outline-none transition" 
+          title="Logout"
+          on:click={handleLogout}
+        >
+          <!-- Logout icon -->
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-white">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M9 12h12m0 0l-3-3m3 3l-3 3"/>
+          </svg>
+        </button>
+      </div>
     </div>
-</div>
-
-<slot></slot>
+  </nav>
+  {/if}
+  
+  <slot></slot>
+  
