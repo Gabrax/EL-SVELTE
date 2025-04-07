@@ -1,8 +1,10 @@
 <script lang="ts">
-    import EventCard from '../../lib/EventCard.svelte';
-    export let data;
-    let { supabase, session } = data;
-    type event = {
+  import EventCard from '../../lib/EventCard.svelte';
+
+  export let data;
+  let { supabase, session } = data;
+
+  type event = {
     id: number;
     name: string;
     description: string;
@@ -12,120 +14,130 @@
     isFavorite: boolean;
   };
 
-  export const events = [
-      {
-        id: 1,
-        name: "Svelte Conf 2025",
-        description: "Największa konferencja Svelte na świecie!",
-        date: "2025-07-20",
-        time: "10:00",
-        location: "Berlin, Niemcy",
-        isFavorite: false,
-      },
-      {
-        id: 2,
-        name: "Frontend Fest",
-        description: "Spotkanie frontendowców z całej Europy",
-        date: "2025-06-15",
-        time: "14:00",
-        location: "Warszawa, Polska",
-        isFavorite: false,
-      },
-      {
-        id: 3,
-        name: "Open Source Meetup",
-        description: "Prezentacje i networking dla fanów open source.",
-        date: "2025-08-01",
-        time: "18:00",
-        location: "Kraków, Polska",
-        isFavorite: false,
-      },
-      {
-        id: 4,
-        name: "Hackathon AI",
-        description: "48h kodowania z użyciem AI — wygraj nagrody!",
-        date: "2025-09-10",
-        time: "09:00",
-        location: "Online",
-        isFavorite: false,
-      },
-      {
-        id: 5,
-        name: "Tech Talks Poznań",
-        description: "Prelekcje i networking z lokalną sceną IT",
-        date: "2025-05-30",
-        time: "17:30",
-        location: "Poznań, Polska",
-        isFavorite: true,
-      },
-      {
-        id: 6,
-        name: "React Europe",
-        description: "Wydarzenie dla fanów Reacta i frontendu",
-        date: "2025-07-01",
-        time: "11:00",
-        location: "Paryż, Francja",
-        isFavorite: false,
-      },
-      {
-        id: 7,
-        name: "Code Camp 2025",
-        description: "Tygodniowy bootcamp z najlepszymi mentorami",
-        date: "2025-08-20",
-        time: "09:00",
-        location: "Zakopane, Polska",
-        isFavorite: false,
-      },
-      {
-        id: 8,
-        name: "JavaScript Picnic",
-        description: "Luzne spotkanie devów JS + grill 🍔",
-        date: "2025-06-10",
-        time: "16:00",
-        location: "Gdańsk, Polska",
-        isFavorite: true,
-      },
-      {
-        id: 9,
-        name: "UX/UI Design Night",
-        description: "Inspirujące case studies i design talki",
-        date: "2025-07-12",
-        time: "18:00",
-        location: "Wrocław, Polska",
-        isFavorite:false
-      },
-    {
-        id: 10,
-        name: "CyberSec Forum",
-        description: "Cyberbezpieczeństwo w praktyce – prelekcje + warsztaty",
-        date: "2025-10-05",
-        time: "10:00",
-        location: "Online",
-        isFavorite:false
-    }
-        ];
+  let events: event[] = [];
 
-        // Funkcja do obsługi ulubionych
-  function toggleFavorite(eventId: number): void { // Dodano typ `number` dla eventId
-    const event = events.find(e => e.id === eventId);
-    if (event) {
-      event.isFavorite = !event.isFavorite; // Zmiana stanu ulubionych
-    }
+  function formatTableName(email: string): string {
+    return email.replace(/@/g, '_at_').replace(/\./g, '_dot_');
   }
+
+  async function fetchEvents() {
+    const { data, error } = await supabase.from('global_events').select('*');
+    if (error) {
+      console.error("Error fetching events:", error.message);
+      return;
+    }
+
+    // Map fetched data to our event structure
+    events = data.map(e => ({
+      id: e.id,
+      name: e.event_name,
+      description: e.event_desc,
+      date: e.event_date,
+      time: e.event_time,
+      location: e.event_loc,
+      isFavorite: false
+    }));
+  }
+
+  async function toggleFavorite(eventId: number): Promise<void> {
+    const event = events.find(e => e.id === eventId);
+    if (!event || !session?.user?.email) return;
+
+    event.isFavorite = !event.isFavorite;
+    events = [...events];
+
+    const tableName = formatTableName(session.user.email);
+
+    if (event.isFavorite) {
+      // Add to favorites in Supabase
+      const { error } = await supabase.from(tableName).insert([
+        {
+          event_name: event.name,
+          event_desc: event.description,
+          event_date: event.date,
+          event_time: event.time,
+          event_loc: event.location,
+        }
+      ]);
+
+      if (error) {
+        console.error("Error adding to favorites:", error.message);
+        event.isFavorite = false; // Revert if there's an error
+      }
+    } else {
+      // Remove from favorites in Supabase
+      const { error } = await supabase.from(tableName).delete().match({ event_ID: event.id });
+
+      if (error) {
+        console.error("Error removing from favorites:", error.message);
+        event.isFavorite = true; // Revert if there's an error
+      }
+    }
+
+    events = [...events];
+  }
+
+  let newEvent: event = {
+    name: "",
+    description: "",
+    date: "",
+    time: "",
+    location: "",
+    isFavorite: false
+  };
+
+  async function addEvent() {
+    if (!newEvent.name || !newEvent.date || !newEvent.time || !newEvent.location) return;
+
+    // Push to global_events table in Supabase
+    const { error } = await supabase.from('global_events').insert([
+      {
+        event_name: newEvent.name,
+        event_desc: newEvent.description,
+        event_date: newEvent.date,
+        event_time: newEvent.time,
+        event_loc: newEvent.location,
+      }
+    ]);
+
+    if (error) {
+      console.error("Error adding event to global_events:", error.message);
+      return;
+    }
+
+    // Re-fetch events to update UI
+    await fetchEvents();
+
+    // Reset form fields
+    newEvent = { name: "", description: "", date: "", time: "", location: "", isFavorite: false };
+  }
+
+  // Fetch events when component loads
+  fetchEvents();
 </script>
-  
-  <div class="w-full min-h-screen bg-gradient-to-b from-[#0f172a] to-[#111827] pt-20 space-y-6 overflow-x-hidden">
-    <h2 class="text-3xl font-bold text-pink-400 text-center">Wydarzenia</h2>
-    
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 px-6">
-      {#each events as event}
-        <div class="hover:shadow-lg transition">
-          <!-- Przekazanie funkcji toggleFavorite do komponentu EventCard -->
-          <EventCard {event} {toggleFavorite} />
-        </div>
-      {/each}
+
+<div class="w-full min-h-screen bg-gradient-to-b from-[#0f172a] to-[#111827] pt-20 space-y-6 overflow-x-hidden flex flex-col items-center">
+  <h2 class="text-3xl font-bold text-pink-400 text-center">Wydarzenia</h2>
+
+  <div class="bg-gray-900 p-6 rounded-lg shadow-lg w-96 text-white">
+    <h3 class="text-xl font-bold mb-4 text-center">Dodaj nowe wydarzenie</h3>
+    <div class="flex flex-col gap-3">
+      <input type="text" bind:value={newEvent.name} placeholder="Nazwa wydarzenia" class="p-2 rounded bg-gray-800 text-white" />
+      <input type="text" bind:value={newEvent.description} placeholder="Opis" class="p-2 rounded bg-gray-800 text-white" />
+      <input type="date" bind:value={newEvent.date} class="p-2 rounded bg-gray-800 text-white" />
+      <input type="time" bind:value={newEvent.time} class="p-2 rounded bg-gray-800 text-white" />
+      <input type="text" bind:value={newEvent.location} placeholder="Lokalizacja" class="p-2 rounded bg-gray-800 text-white" />
+      <button on:click={addEvent} class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded">
+        Dodaj wydarzenie
+      </button>
     </div>
   </div>
-  
 
-  
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 px-6 mt-8">
+    {#each events as event}
+      <div class="hover:shadow-lg transition">
+        <EventCard {event} {toggleFavorite} />
+      </div>
+    {/each}
+  </div>
+</div>
