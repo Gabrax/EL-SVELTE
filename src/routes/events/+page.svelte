@@ -6,22 +6,19 @@
 
   type event = {
     id: number;
-    name: string;
+    title: string;
     description: string;
-    date: string;
-    time: string;
+    start_date: string;
+    end_date: string;
     location: string;
+    venue: string;
     isFavorite: boolean;
   };
 
   let events: event[] = [];
 
-  function formatTableName(email: string): string {
-    return email.replace(/@/g, '_at_').replace(/\./g, '_dot_');
-  }
-
   async function fetchEvents() {
-    const { data, error } = await supabase.from('global_events').select('*');
+    const { data, error } = await supabase.from('conferences').select('*');
     if (error) {
       console.error("Error fetching events:", error.message);
       return;
@@ -30,78 +27,83 @@
     // Map fetched data to our event structure
     events = data.map(e => ({
       id: e.id,
-      name: e.event_name,
-      description: e.event_desc,
-      date: e.event_date,
-      time: e.event_time,
-      location: e.event_loc,
+      title: e.title,
+      description: e.description,
+      start_date: e.start_date,
+      end_date: e.end_date,
+      location: e.location,
+      venue: e.venue,
       isFavorite: false
     }));
   }
 
   async function toggleFavorite(eventId: number): Promise<void> {
-    const event = events.find(e => e.id === eventId);
-    if (!event || !session?.user?.email) return;
+      const event = events.find(e => e.id === eventId);
+      if (!event || !session?.user?.id) return;
 
-    event.isFavorite = !event.isFavorite;
-    events = [...events];
+      event.isFavorite = !event.isFavorite;
+      events = [...events];
 
-    const tableName = formatTableName(session.user.email);
+      const userId = session.user.id;
 
-    if (event.isFavorite) {
-      // Add to favorites in Supabase
-      const { error } = await supabase.from(tableName).insert([
-        {
-          event_name: event.name,
-          event_desc: event.description,
-          event_date: event.date,
-          event_time: event.time,
-          event_loc: event.location,
-        }
-      ]);
+      if (event.isFavorite) {
 
-      if (error) {
-        console.error("Error adding to favorites:", error.message);
-        event.isFavorite = false; // Revert if there's an error
+          const { error: participantError } = await supabase.from('conference_participants').insert([
+              {
+                  conference_id: event.id,
+                  user_id: userId,
+                  is_favourited: true
+              }
+          ]);
+
+          if (participantError) {
+              console.error("Error adding participant record:", participantError.message);
+              event.isFavorite = false; // Revert if there's an error
+          }
+      } else {
+          const { error: participantRemoveError } = await supabase
+              .from('conference_participants')
+              .delete()
+              .match({ conference_id: event.id, user_id: userId });
+
+          if (participantRemoveError) {
+              console.error("Error removing participant record:", participantRemoveError.message);
+              event.isFavorite = true; // Revert if there's an error
+          }
       }
-    } else {
-      // Remove from favorites in Supabase
-      const { error } = await supabase.from(tableName).delete().match({ event_ID: event.id });
 
-      if (error) {
-        console.error("Error removing from favorites:", error.message);
-        event.isFavorite = true; // Revert if there's an error
-      }
-    }
-
-    events = [...events];
+      events = [...events];
   }
 
+
   let newEvent: event = {
-    name: "",
+    id: 0,
+    title: "",
     description: "",
-    date: "",
-    time: "",
+    start_date: "",
+    end_date: "",
     location: "",
+    venue: "",
     isFavorite: false
   };
 
   async function addEvent() {
-    if (!newEvent.name || !newEvent.date || !newEvent.time || !newEvent.location) return;
+    if (!newEvent.title || !newEvent.start_date || !newEvent.end_date || !newEvent.location || !newEvent.venue) return;
 
-    // Push to global_events table in Supabase
-    const { error } = await supabase.from('global_events').insert([
+    // Push to conferences table in Supabase
+    const { error } = await supabase.from('conferences').insert([
       {
-        event_name: newEvent.name,
-        event_desc: newEvent.description,
-        event_date: newEvent.date,
-        event_time: newEvent.time,
-        event_loc: newEvent.location,
+        title: newEvent.title,
+        description: newEvent.description,
+        start_date: newEvent.start_date,
+        end_date: newEvent.end_date,
+        location: newEvent.location,
+        venue: newEvent.venue,
       }
     ]);
 
     if (error) {
-      console.error("Error adding event to global_events:", error.message);
+      console.error("Error adding event to conferences:", error.message);
       return;
     }
 
@@ -109,7 +111,16 @@
     await fetchEvents();
 
     // Reset form fields
-    newEvent = { name: "", description: "", date: "", time: "", location: "", isFavorite: false };
+    newEvent = {
+      id: 0,
+      title: "",
+      description: "",
+      start_date: "",
+      end_date: "",
+      location: "",
+      venue: "",
+      isFavorite: false
+    };
   }
 
   // Fetch events when component loads
@@ -122,11 +133,12 @@
   <div class="bg-gray-900 p-6 rounded-lg shadow-lg w-96 text-white">
     <h3 class="text-xl font-bold mb-4 text-center">Dodaj nowe wydarzenie</h3>
     <div class="flex flex-col gap-3">
-      <input type="text" bind:value={newEvent.name} placeholder="Nazwa wydarzenia" class="p-2 rounded bg-gray-800 text-white" />
+      <input type="text" bind:value={newEvent.title} placeholder="Tytuł wydarzenia" class="p-2 rounded bg-gray-800 text-white" />
       <input type="text" bind:value={newEvent.description} placeholder="Opis" class="p-2 rounded bg-gray-800 text-white" />
-      <input type="date" bind:value={newEvent.date} class="p-2 rounded bg-gray-800 text-white" />
-      <input type="time" bind:value={newEvent.time} class="p-2 rounded bg-gray-800 text-white" />
+      <input type="date" bind:value={newEvent.start_date} class="p-2 rounded bg-gray-800 text-white" />
+      <input type="date" bind:value={newEvent.end_date} class="p-2 rounded bg-gray-800 text-white" />
       <input type="text" bind:value={newEvent.location} placeholder="Lokalizacja" class="p-2 rounded bg-gray-800 text-white" />
+      <input type="text" bind:value={newEvent.venue} placeholder="Miejsce wydarzenia" class="p-2 rounded bg-gray-800 text-white" />
       <button on:click={addEvent} class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded">
         Dodaj wydarzenie
       </button>
