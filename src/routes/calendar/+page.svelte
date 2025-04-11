@@ -13,6 +13,7 @@
         location: string;
         venue: string;
         isFavorite: boolean;
+        video_link?: string; // Add video_link as an optional field
     };
 
     type CalendarDay = {
@@ -28,6 +29,13 @@
     let currentYear = today.getFullYear();
     let dates: CalendarDay[] = [];
     let hoveredEvents: Event[] = [];
+    let showPopup = false;
+    let isMinimized = false;
+    let popupPosition = { x: 0, y: 0 }; // For tracking position of the popup
+    let dragging = false;
+    let dragOffset = { x: 0, y: 0 }; // Offset for dragging
+    let videoUrl: string = '';
+
 
     let months = Array.from({ length: 12 }, (_, i) =>
         new Date(currentYear, i).toLocaleString("default", { month: "long" })
@@ -53,14 +61,15 @@
 
             const conferenceIds = participantData.map(p => p.conference_id);
 
-            // Fetch event details from conferences table
+            // Fetch event details from conferences table, including the video_link
             let { data: conferenceData, error: confError } = await supabase
                 .from("conferences")
-                .select("*")
+                .select("*")  // Ensure you're selecting the video_link column as well
                 .in("id", conferenceIds);
 
             if (confError) throw confError;
 
+            // Update events array to include video_link
             events = conferenceData.map(conf => ({
                 id: conf.id,
                 title: conf.title,
@@ -70,6 +79,7 @@
                 location: conf.location,
                 venue: conf.venue,
                 isFavorite: true,
+                video_link: conf.video_link // Store the video_link here
             }));
 
             dates = generateDates(currentYear, currentMonth);
@@ -125,6 +135,66 @@
     onMount(fetchFavoriteEvents);
     $: favoriteEvents = events.filter(event => event.isFavorite);
     $: myEvents = events;
+
+    // Function to handle click on a day
+    function handleDayClick(events: Event[]): void {
+        hoveredEvents = events;
+    }
+
+    function handleWatchButtonClick(event: Event): void {
+        showPopup = true;
+        if (event.video_link) {
+            // Check if video_link is a valid YouTube URL and append autoplay=1
+            let url = new URL(event.video_link);
+            if (!url.searchParams.has('autoplay')) {
+                url.searchParams.set('autoplay', '1'); // Add autoplay parameter
+            }
+            videoUrl = url.toString(); // Set videoUrl with autoplay
+        }
+    }
+
+    // Close the popup
+    function closePopup(): void {
+        showPopup = false;
+    }
+
+    // Minimize the popup
+    function minimizePopup(): void {
+        isMinimized = true;
+    }
+
+    // Restore the minimized popup
+    function restorePopup(): void {
+        isMinimized = false;
+    }
+
+    // Start dragging the popup
+    function startDrag(event: MouseEvent): void {
+        dragging = true;
+        dragOffset = {
+            x: event.clientX - popupPosition.x,
+            y: event.clientY - popupPosition.y
+        };
+        document.addEventListener("mousemove", handleDrag);
+        document.addEventListener("mouseup", stopDrag);
+    }
+
+    // Handle dragging
+    function handleDrag(event: MouseEvent): void {
+        if (dragging) {
+            popupPosition = {
+                x: event.clientX - dragOffset.x,
+                y: event.clientY - dragOffset.y
+            };
+        }
+    }
+
+    // Stop dragging
+    function stopDrag(): void {
+        dragging = false;
+        document.removeEventListener("mousemove", handleDrag);
+        document.removeEventListener("mouseup", stopDrag);
+    }
 </script>
 
 
@@ -160,8 +230,7 @@
                                         ? 'bg-gray-800 text-gray-500'
                                         : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
                         }`}
-                    on:mouseenter={() => hoveredEvents = events}
-                    on:mouseleave={() => hoveredEvents = []}
+                    on:click={() => handleDayClick(events)}
                 >
                     <div class="text-xs text-gray-400">{weekday}</div>
                     <div class="text-xl font-bold">{day}</div>
@@ -174,39 +243,73 @@
     </div>
 
     <!-- PRAWA SEKCJA -->
-	<div class="w-full lg:w-[800px] mt-4 lg:mt-20 grid grid-cols-1 md:grid-cols-2 gap-6 self-start ml-auto">
-		<!-- SZCZEGÓŁY -->
-		<div class={`p-6 bg-[#1e293b] border rounded-lg shadow-lg transition-all duration-300 min-h-[300px]
-			border-pink-500 ${hoveredEvents.length > 0 ? 'border-blue-400 shadow-blue-500' : ''}`}>
-			<h3 class="text-2xl font-bold text-pink-400 mb-4">Szczegóły wydarzenia:</h3>
-			{#if hoveredEvents.length > 0}
-				<ul>
-					{#each hoveredEvents as event}
-						<li class="text-gray-300 mb-4">
-							<strong>{event.title}</strong><br />
-							{event.description}<br />
-							<span class="text-sm text-pink-300">
+    <div class="w-full lg:w-[800px] mt-4 lg:mt-20 grid grid-cols-1 md:grid-cols-2 gap-6 self-start ml-auto">
+        <!-- SZCZEGÓŁY -->
+        <div class={`p-6 bg-[#1e293b] border rounded-lg shadow-lg transition-all duration-300 min-h-[300px] border-pink-500 ${hoveredEvents.length > 0 ? 'border-blue-400 shadow-blue-500' : ''}`}>
+            <h3 class="text-2xl font-bold text-pink-400 mb-4">Szczegóły wydarzenia:</h3>
+            {#if hoveredEvents.length > 0}
+                <ul>
+                    {#each hoveredEvents as event}
+                        <li class="text-gray-300 mb-4">
+                            <strong>{event.title}</strong><br />
+                            {event.description}<br />
+                            <span class="text-sm text-pink-300">
                                 {event.location} - {event.venue}<br />
                                 {event.start_date} - {event.end_date}
                             </span>
-						</li>
-					{/each}
-				</ul>
-			{:else}
-				<p class="text-gray-500 text-sm">Najedź na dzień z wydarzeniem</p>
-			{/if}
-		</div>
+                        </li>
+                    {/each}
+                </ul>
+                <button class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors" on:click={() => handleWatchButtonClick(hoveredEvents[0])}>
+                    Watch
+                </button>
+            {:else}
+                <p class="text-gray-500 text-sm">Najedź na dzień z wydarzeniem</p>
+            {/if}
+        </div>
 
-		<!-- MOJE -->
-		<div class="p-6 bg-[#1e293b] border border-pink-500 rounded-lg shadow-lg min-h-[300px]">
-			<h3 class="text-2xl font-bold text-pink-400 mb-4">Moje wydarzenia:</h3>
-			<ul>
-				{#each myEvents as event}
+        <!-- MOJE -->
+        <div class="p-6 bg-[#1e293b] border border-pink-500 rounded-lg shadow-lg min-h-[300px]">
+            <h3 class="text-2xl font-bold text-pink-400 mb-4">Moje wydarzenia:</h3>
+            <ul>
+                {#each myEvents as event}
                     <li class="text-gray-300 mb-2">
                         <strong>{event.title}</strong> - {event.start_date}
                     </li>
                 {/each}
-			</ul>
-		</div>
-	</div>
+            </ul>
+        </div>
+    </div>
 </div>
+
+{#if showPopup}
+    <!-- Popup modal -->
+    <div class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 z-50 flex justify-center items-center" on:click={closePopup}>
+        <div class="relative w-[80vw] h-[70vh] bg-[#1e293b] border rounded-lg shadow-lg" style="top: {popupPosition.y}px; left: {popupPosition.x}px;" on:mousedown={startDrag}>
+            <!-- Close and Minimize buttons -->
+            <div class="absolute top-2 right-2 flex gap-2">
+                <button class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600" on:click={closePopup}>X</button>
+                <button class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600" on:click={minimizePopup}>_</button>
+            </div>
+
+            <!-- Popup content -->
+            <div class="w-full h-full">
+                {#if !isMinimized}
+                    <!-- YouTube player -->
+                    <iframe
+                        width="100%"
+                        height="100%"
+                        src="{videoUrl}"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen
+                    ></iframe>
+                {:else}
+                    <div class="w-full h-full flex justify-center items-center text-white">
+                        <span>Minimized</span>
+                    </div>
+                {/if}
+            </div>
+        </div>
+    </div>
+{/if}
