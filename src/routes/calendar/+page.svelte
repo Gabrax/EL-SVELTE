@@ -154,16 +154,17 @@
     }
 
     // Close the popup
-    function closePopup(): void {
+    function closePopup(event: MouseEvent): void {
+        // Prevent close if the click is inside the popup
+        event.stopPropagation();
         showPopup = false;
+        isMinimized = false;
     }
 
-    // Minimize the popup
     function minimizePopup(): void {
-        isMinimized = true;
+        isMinimized = !isMinimized;
     }
 
-    // Restore the minimized popup
     function restorePopup(): void {
         isMinimized = false;
     }
@@ -284,8 +285,12 @@
 
 {#if showPopup}
     <!-- Popup modal -->
-    <div class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 z-50 flex justify-center items-center" on:click={closePopup}>
-        <div class="relative w-[80vw] h-[70vh] bg-[#1e293b] border rounded-lg shadow-lg" style="top: {popupPosition.y}px; left: {popupPosition.x}px;" on:mousedown={startDrag}>
+    <div class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 z-50 flex justify-center items-center" on:mousedown|stopPropagation>
+        <div
+            class="relative transition-all duration-500 ease-in-out"
+            style="top: {popupPosition.y}px; left: {popupPosition.x}px; width: {isMinimized ? '20%' : '80%'}; height: {isMinimized ? '20%' : '80%'};"
+            on:mousedown={startDrag}
+        >
             <!-- Close and Minimize buttons -->
             <div class="absolute top-2 right-2 flex gap-2">
                 <button class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600" on:click={closePopup}>X</button>
@@ -294,21 +299,15 @@
 
             <!-- Popup content -->
             <div class="w-full h-full">
-                {#if !isMinimized}
-                    <!-- YouTube player -->
-                    <iframe
-                        width="100%"
-                        height="100%"
-                        src="{videoUrl}"
-                        frameborder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowfullscreen
-                    ></iframe>
-                {:else}
-                    <div class="w-full h-full flex justify-center items-center text-white">
-                        <span>Minimized</span>
-                    </div>
-                {/if}
+                <!-- YouTube player -->
+                <iframe
+                    width="100%"
+                    height="100%"
+                    src="{videoUrl}"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen
+                ></iframe>
             </div>
         </div>
     </div>

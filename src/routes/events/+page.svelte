@@ -6,6 +6,7 @@
 
   type Event = {
     id: number;
+    user_id: number;
     title: string;
     description: string;
     start_date: string;
@@ -47,6 +48,7 @@
 
     events = data.map(e => ({
       id: e.id,
+      user_id: e.user_id,
       title: e.title,
       description: e.description,
       start_date: e.start_date,
@@ -101,6 +103,7 @@
 
   let newEvent: Event = {
     id: 0,
+    user_id: 0,
     title: "",
     description: "",
     start_date: "",
@@ -112,30 +115,18 @@
   };
 
   async function addEvent() {
-    if (!newEvent.title) {
-      console.log("Missing title");
-    }
-    if (!newEvent.start_date) {
-      console.log("Missing start_date");
-    }
-    if (!newEvent.end_date) {
-      console.log("Missing end_date");
-    }
-    if (!newEvent.location) {
-      console.log("Missing location");
-    }
-    if (!newEvent.venue) {
-      console.log("Missing venue");
-    }
 
-    //if (!newEvent.title || !newEvent.start_date || !newEvent.end_date || !newEvent.location || !newEvent.venue) {
+    //if (!newEvent.title && !newEvent.start_date || !newEvent.end_date || !newEvent.location || !newEvent.venue) {
     //  return;
     //}
+
+    const userId = session.user.id;
     
     const embedUrl = newEvent.video_link ? convertToEmbedUrl(newEvent.video_link) : null;
 
     const { error } = await supabase.from('conferences').insert([
       {
+        user_id: userId, 
         title: newEvent.title,
         description: newEvent.description,
         start_date: newEvent.start_date,
@@ -155,6 +146,7 @@
 
     newEvent = {
       id: 0,
+      user_id: 0,
       title: "",
       description: "",
       start_date: "",
@@ -164,6 +156,44 @@
       isFavorite: false,
       video_link: ""
     };
+  }
+
+  async function onEdit(updatedEvent: { id: number; title: string; description: string; start_date: string; end_date: string; location: string; venue: string; video_link: string | null }) {
+    const { error } = await supabase
+      .from('conferences')
+      .update({
+        title: updatedEvent.title,
+        description: updatedEvent.description,
+        start_date: updatedEvent.start_date,
+        end_date: updatedEvent.end_date,
+        location: updatedEvent.location,
+        venue: updatedEvent.venue,
+        video_link: updatedEvent.video_link ? convertToEmbedUrl(updatedEvent.video_link) : null
+      })
+      .eq('id', updatedEvent.id);
+
+    if (error) {
+      console.error("Error updating event:", error.message);
+      return;
+    }
+
+    // Update the local events array to reflect the changes
+    events = events.map(e => e.id === updatedEvent.id ? updatedEvent : e);
+  }
+
+  async function deleteEvent(eventId: number) {
+    const { error } = await supabase
+      .from('conferences')
+      .delete()
+      .match({ id: eventId });
+
+    if (error) {
+      console.error("Error deleting event:", error.message);
+      return;
+    }
+
+    // Remove the event from the local events array
+    events = events.filter(e => e.id !== eventId);
   }
 
   fetchEvents();
@@ -181,7 +211,8 @@
         <input bind:value={newEvent.description} placeholder="Opis" class="p-2 rounded bg-gray-800 text-white" />
         <input type="date" bind:value={newEvent.start_date} class="p-2 rounded bg-gray-800 text-white" />
         <input type="date" bind:value={newEvent.end_date} class="p-2 rounded bg-gray-800 text-white" />
-        <input bind:value={newEvent.location} placeholder="Lokalizacja" class="p-2 rounded bg-gray-800 text-white" />
+        <input bind:value={newEvent.location} placeholder="Miasto" class="p-2 rounded bg-gray-800 text-white" />
+        <input bind:value={newEvent.venue} placeholder="Venue" class="p-2 rounded bg-gray-800 text-white" />
         <input bind:value={newEvent.video_link} placeholder="Opcjonalny link YouTube" class="p-2 rounded bg-gray-800 text-white" />
         <button on:click={addEvent} class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded">Dodaj wydarzenie</button>
       </div>
@@ -189,6 +220,6 @@
   {/if}
 
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 px-6 mt-8">
-    {#each events as event} <EventCard {event} {toggleFavorite} /> {/each}
+    {#each events as event} <EventCard {event} onEdit={onEdit} deleteEvent={deleteEvent} {toggleFavorite} currentUserId={session.user.id} /> {/each}
   </div>
 </div>
