@@ -37,43 +37,43 @@
     userRole = data?.role ?? null;
   }
 
-async function fetchEvents() {
-  if (!supabase) return;
+  async function fetchEvents() {
+    if (!supabase) return;
 
-  const { data, error } = await supabase.from('conferences').select('*');
-  if (error) {
-    console.error("Error fetching events:", error.message);
-    return;
-  }
-
-  let favoriteIds: number[] = [];
-
-  if (session?.user?.id) {
-    const { data: favs, error: favsError } = await supabase
-      .from('conference_participants')
-      .select('conference_id')
-      .eq('user_id', session.user.id)
-      .eq('is_favourited', true);
-
-    if (favsError) {
-      console.error("Error fetching favorites:", favsError.message);
-    } else {
-      favoriteIds = favs.map(f => f.conference_id);
+    const { data, error } = await supabase.from('conferences').select('*');
+    if (error) {
+      console.error("Error fetching events:", error.message);
+      return;
     }
-  }
 
-  events = data.map(e => ({
-    id: e.id,
-    user_id: e.user_id,
-    title: e.title,
-    description: e.description,
-    start_date: e.start_date,
-    end_date: e.end_date,
-    location: e.location,
-    venue: e.venue,
-    isFavorite: favoriteIds.includes(e.id),
-  }));
-}
+    let favoriteIds: number[] = [];
+
+    if (session?.user?.id) {
+      const { data: favs, error: favsError } = await supabase
+        .from('conference_participants')
+        .select('conference_id')
+        .eq('user_id', session.user.id)
+        .eq('is_favourited', true);
+
+      if (favsError) {
+        console.error("Error fetching favorites:", favsError.message);
+      } else {
+        favoriteIds = favs.map(f => f.conference_id);
+      }
+    }
+
+    events = data.map(e => ({
+      id: e.id,
+      user_id: e.user_id,
+      title: e.title,
+      description: e.description,
+      start_date: e.start_date,
+      end_date: e.end_date,
+      location: e.location,
+      venue: e.venue,
+      isFavorite: favoriteIds.includes(e.id),
+    }));
+  }
 
 
   function convertToEmbedUrl(url: string): string {
@@ -133,7 +133,7 @@ async function fetchEvents() {
 
   async function addEvent() {
 
-    //if (!newEvent.title && !newEvent.start_date || !newEvent.end_date || !newEvent.location || !newEvent.venue) {
+ //if (!newEvent.title && !newEvent.start_date || !newEvent.end_date || !newEvent.location || !newEvent.venue) {
     //  return;
     //}
 
@@ -194,7 +194,7 @@ async function fetchEvents() {
       return;
     }
 
-    // Update the local events array to reflect the changes
+        // Update the local events array to reflect the changes
     events = events.map(e => e.id === updatedEvent.id ? updatedEvent : e);
   }
 
@@ -212,6 +212,50 @@ async function fetchEvents() {
     // Remove the event from the local events array
     events = events.filter(e => e.id !== eventId);
   }
+
+  function convertToCSV(events: Event[]): string {
+  const header = ["id", "title", "description", "start_date", "end_date", "location", "venue", "video_link", "user_id"];
+  
+  const rows = events.map(event => [
+    event.id,
+    event.title,
+    event.description,
+    event.start_date,
+    event.end_date,
+    event.location,
+    event.venue,
+    event.video_link || '',
+    event.user_id
+  ].map(val => String(val).replace(/[\n\r,]/g, ' '))); 
+
+  const csvContent = [
+    header.join(","),           
+    ...rows.map(row => row.join(","))  
+  ].join("\n");
+
+  return csvContent;
+}
+
+
+
+  function exportToCSV() {
+    const csvContent = convertToCSV(events);
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", "wydarzenia.csv");
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }
+
+
+  
 
   fetchEvents();
   fetchUserRole();
@@ -239,4 +283,10 @@ async function fetchEvents() {
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 px-6 mt-8">
     {#each events as event} <EventCard {event} onEdit={onEdit} deleteEvent={deleteEvent} {toggleFavorite} currentUserId={session.user.id} /> {/each}
   </div>
+
+  <button on:click={exportToCSV} class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded mt-4">
+    Eksportuj do CSV
+  </button>
+
 </div>
+
