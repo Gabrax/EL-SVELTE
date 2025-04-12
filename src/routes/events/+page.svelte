@@ -37,27 +37,44 @@
     userRole = data?.role ?? null;
   }
 
-  async function fetchEvents() {
-    if (!supabase) return;
+async function fetchEvents() {
+  if (!supabase) return;
 
-    const { data, error } = await supabase.from('conferences').select('*');
-    if (error) {
-      console.error("Error fetching events:", error.message);
-      return;
-    }
-
-    events = data.map(e => ({
-      id: e.id,
-      user_id: e.user_id,
-      title: e.title,
-      description: e.description,
-      start_date: e.start_date,
-      end_date: e.end_date,
-      location: e.location,
-      venue: e.venue,
-      isFavorite: false,
-    }));
+  const { data, error } = await supabase.from('conferences').select('*');
+  if (error) {
+    console.error("Error fetching events:", error.message);
+    return;
   }
+
+  let favoriteIds: number[] = [];
+
+  if (session?.user?.id) {
+    const { data: favs, error: favsError } = await supabase
+      .from('conference_participants')
+      .select('conference_id')
+      .eq('user_id', session.user.id)
+      .eq('is_favourited', true);
+
+    if (favsError) {
+      console.error("Error fetching favorites:", favsError.message);
+    } else {
+      favoriteIds = favs.map(f => f.conference_id);
+    }
+  }
+
+  events = data.map(e => ({
+    id: e.id,
+    user_id: e.user_id,
+    title: e.title,
+    description: e.description,
+    start_date: e.start_date,
+    end_date: e.end_date,
+    location: e.location,
+    venue: e.venue,
+    isFavorite: favoriteIds.includes(e.id),
+  }));
+}
+
 
   function convertToEmbedUrl(url: string): string {
     const regex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^&]+)/;
