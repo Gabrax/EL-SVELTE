@@ -254,6 +254,65 @@
     }
   }
 
+  async function importCSV(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+
+  const text = await file.text(); 
+  const rows = parseCSV(text);  
+
+  // Wstaw dane do bazy
+  for (const row of rows) {
+    const { title, description, start_date, end_date, location, venue, video_link, user_id } = row;
+
+    const embedUrl = video_link ? convertToEmbedUrl(video_link) : null;
+
+    const { error } = await supabase.from('conferences').insert([
+      {
+        title,
+        description,
+        start_date,
+        end_date,
+        location,
+        venue,
+        video_link: embedUrl,
+        user_id,
+      },
+    ]);
+
+    if (error) {
+      console.error("Błąd podczas importu wydarzenia:", error.message);
+      continue;  
+    }
+  }
+
+  await fetchEvents(); 
+}
+function parseCSV(csvText: string): { title: string; description: string; start_date: string; end_date: string; location: string; venue: string; video_link: string | null; user_id: number }[] {
+  const rows = csvText.split("\n").map(row => row.trim()).filter(row => row.length > 0);
+  const header = rows[0].split(",");  
+  const data = rows.slice(1);  
+
+  return data.map(row => {
+    const columns = row.split(",").map(col => col.trim());
+    const event: { [key: string]: string } = {};
+
+    header.forEach((col, idx) => {
+      event[col] = columns[idx] || '';  
+    });
+
+    return {
+      title: event['title'],
+      description: event['description'],
+      start_date: event['start_date'],
+      end_date: event['end_date'],
+      location: event['location'],
+      venue: event['venue'],
+      video_link: event['video_link'] || null,
+      user_id: event['user_id'], 
+    };
+  });
+}
 
   
 
@@ -283,10 +342,19 @@
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 px-6 mt-8">
     {#each events as event} <EventCard {event} onEdit={onEdit} deleteEvent={deleteEvent} {toggleFavorite} currentUserId={session.user.id} /> {/each}
   </div>
+  {#if userRole !== 0}
+  <div class="flex space-x-4 mt-4">
+    <button on:click={exportToCSV} class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded">
+      Eksportuj do CSV
+    </button>
 
-  <button on:click={exportToCSV} class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded mt-4">
-    Eksportuj do CSV
-  </button>
+    <label class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded cursor-pointer">
+      Importuj z CSV
+      <input type="file" accept=".csv" on:change={importCSV} class="hidden" />
+    </label>
+  </div>
+{/if}
+
 
 </div>
 
