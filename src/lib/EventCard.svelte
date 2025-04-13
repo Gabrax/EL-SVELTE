@@ -15,6 +15,7 @@
   export let onEdit: (id: number) => void; // Function to handle the edit event
   export let currentUserId: number; // The logged-in user's ID
   export let deleteEvent: (id: number) => void; // Function to handle event deletion
+  let isFavorite = event.isFavorite; 
 
   let isModalOpen = false;
   let updatedEvent = { ...event };
@@ -46,10 +47,9 @@
 
   // Handle toggling favorite
   function handleToggle(): void {
-    toggleFavorite(event.id);
-    event.isFavorite = !event.isFavorite;
-    window.location.reload();
-  }
+  isFavorite = !isFavorite; 
+  toggleFavorite(event.id); 
+}
 </script>
 
 <style>
@@ -80,17 +80,25 @@
       </h2>
       
       <!-- Favorite Button -->
-      <button 
-        class={`text-gray-400 hover:text-pink-500 transition ${event.isFavorite ? 'text-pink-500 heart-icon' : ''}`}
-        on:click={handleToggle}
-        title={event.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-      >
-        {#if event.isFavorite}
-          <i class="fa-solid fa-heart"></i>
-        {:else}
-          <i class="fa-regular fa-heart"></i>
-        {/if}
-      </button>
+   <div class="relative">
+  {#if isFavorite}
+    <button 
+      class="text-gray-400 hover:text-pink-500 heart-icon"
+      on:click={handleToggle}
+      title="Remove from favorites"
+    >
+      <i class="fa-solid fa-heart text-pink-500"></i> 
+    </button>
+  {:else}
+    <button 
+      class="text-gray-400 hover:text-pink-500 "
+      on:click={handleToggle}
+      title="Add to favorites"
+    >
+      <i class="fa-regular fa-heart"></i> 
+    </button>
+  {/if}
+</div>
 
       <!-- Edit Button (Visible only if the current user is the event creator) -->
       {#if event.user_id === currentUserId}
