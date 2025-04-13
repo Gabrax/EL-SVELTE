@@ -47,8 +47,28 @@
   // Handle toggling favorite
   function handleToggle(): void {
     toggleFavorite(event.id);
+    event.isFavorite = !event.isFavorite;
+    window.location.reload();
   }
 </script>
+
+<style>
+  @keyframes heart-pulse {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.5);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  .heart-icon {
+    animation: heart-pulse 0.6s ease-in-out;
+  }
+</style>
 
 <div class="group relative p-[1px] rounded-2xl bg-gradient-to-tr from-purple-500 via-pink-500 to-blue-500 transition-all duration-300 hover:scale-105 hover:shadow-2xl">
   <div class="bg-[#0f172a] rounded-2xl p-5 h-full flex flex-col justify-between">
@@ -61,7 +81,7 @@
       
       <!-- Favorite Button -->
       <button 
-        class={`text-gray-400 hover:text-pink-500 transition ${event.isFavorite ? 'text-pink-500' : ''}`}
+        class={`text-gray-400 hover:text-pink-500 transition ${event.isFavorite ? 'text-pink-500 heart-icon' : ''}`}
         on:click={handleToggle}
         title={event.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
       >
