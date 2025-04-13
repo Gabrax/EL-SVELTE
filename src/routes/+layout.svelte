@@ -91,67 +91,90 @@
   <div class="navbar max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
     <!-- Left side of navbar -->
     <div class="flex items-center space-x-4">
+      <img src="/logo.svg" alt="Logo" class="w-12 h-12" />
       <a href="/events" class="text-pink-400 text-xl font-bold hover:text-pink-300 transition">Svelte Calendar</a>
-      <a href="/calendar" class="text-white text-lg hover:text-pink-400 transition">My Events</a>
+      {#if session}
+        <a href="/calendar" class="text-white text-lg hover:text-pink-400 transition">My Events</a>
+      {/if}
+
     </div>
 
     <!-- Right side of navbar -->
     <div class="flex items-center space-x-4">
-      <span class="text-white text-lg">
-        {#if userProfile.first_name && userProfile.last_name}
-          {userProfile.first_name} {userProfile.last_name}
-        {:else}
-          {session?.user.email}  <!-- Fallback to email if no profile data -->
-        {/if}
-      </span>
-      <button 
-        class="p-2 rounded-full bg-gray-700 hover:bg-gray-600 focus:outline-none transition" 
-        title="Settings"
-        on:click={() => isModalOpen = !isModalOpen}
-      >
-        <i class="fas fa-cogs text-white w-6 h-6"></i>
-      </button>
-      <button 
-        class="p-2 rounded-full bg-gray-700 hover:bg-gray-600 focus:outline-none transition" 
-        title="Logout"
-        on:click={handleLogout}
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-white">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M9 12h12m0 0l-3-3m3 3l-3 3"/>
+      {#if session}
+        <span class="text-white text-lg">
+          {#if userProfile.first_name && userProfile.last_name}
+            {userProfile.first_name} {userProfile.last_name}
+          {:else}
+            {session.user.email}
+          {/if}
+        </span>
+        <button 
+          class="p-2 rounded-full bg-gray-700 hover:bg-gray-600 focus:outline-none transition" 
+          title="Settings"
+          on:click={() => isModalOpen = !isModalOpen}
+        >
+          <i class="fas fa-cogs text-white w-6 h-6"></i>
+        </button>
+        <button 
+          class="p-2 rounded-full bg-gray-700 hover:bg-gray-600 focus:outline-none transition" 
+          title="Logout"
+          on:click={handleLogout}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-white">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M9 12h12m0 0l-3-3m3 3l-3 3"/>
+          </svg>
+        </button>
+      {:else}
+        <button 
+          class="p-2 rounded-full bg-gray-700 hover:bg-gray-600 focus:outline-none transition" 
+          title="Login"
+          on:click={() => goto('/')}
+        >
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+          <g fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+            <path d="M15 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2"/>
+            <path d="M21 12H8l3-3m0 6l-3-3"/>
+          </g>
         </svg>
-      </button>
+        </button>
+      {/if}
     </div>
+
   </div>
 </nav>
 {/if}
 
 {#if isModalOpen}
   <div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-20">
-    <div class="bg-white p-6 rounded-lg max-w-lg w-full space-y-4">
-      <h3 class="text-xl font-semibold">Edit Profile</h3>
+    <div class="bg-gray-900 p-6 rounded-lg shadow-lg w-[90%] max-w-md text-white relative">
+      <h3 class="text-xl font-bold mb-4 text-center">Edytuj Profil</h3>
       <form>
-        <div>
-          <label class="block">First Name</label>
-          <input type="text" class="w-full p-2 border" bind:value={userProfile.first_name} />
+        <div class="mb-4">
+          <label class="block">Imię</label>
+          <input type="text" class="p-2 rounded bg-gray-800 text-white w-full" bind:value={userProfile.first_name} />
         </div>
-        <div>
-          <label class="block">Last Name</label>
-          <input type="text" class="w-full p-2 border" bind:value={userProfile.last_name} />
+        <div class="mb-4">
+          <label class="block">Nazwisko</label>
+          <input type="text" class="p-2 rounded bg-gray-800 text-white w-full" bind:value={userProfile.last_name} />
         </div>
-        <div>
-          <label class="block">Organization</label>
-          <input type="text" class="w-full p-2 border" bind:value={userProfile.organization} />
+        <div class="mb-4">
+          <label class="block">Organizacja</label>
+          <input type="text" class="p-2 rounded bg-gray-800 text-white w-full" bind:value={userProfile.organization} />
         </div>
-        <div class="space-x-4 mt-4">
-          <button type="button" class="p-2 bg-blue-500 text-white rounded" on:click={updateProfile}>Save</button>
-          <button type="button" class="p-2 bg-gray-500 text-white rounded" on:click={() => isModalOpen = false}>Cancel</button>
+        <div class="flex justify-between mt-6">
+          <div>
+            <button class="bg-red-600 hover:bg-red-800 text-white font-bold py-2 px-4 rounded mt-2" on:click={deleteAccount}>Usuń konto</button>
+          </div>
+          <div class="space-x-4 mt-2">
+            <button type="button" class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded" on:click={updateProfile}>Zapisz</button>
+            <button type="button" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" on:click={() => isModalOpen = false}>Anuluj</button>
+          </div>
+          
         </div>
-      </form>
-      <div class="mt-4 space-x-4">
-        <button class="p-2 bg-red-600 text-white rounded" on:click={deleteAccount}>Delete Account</button>
-      </div>
     </div>
   </div>
 {/if}
+
 
 <slot></slot>
