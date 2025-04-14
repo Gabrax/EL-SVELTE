@@ -1,4 +1,7 @@
-<p align="center"> Svelte Event Calendar </p>
+<p align="center">
+    <img src="https://github.com/user-attachments/assets/92b1b5c7-3672-4e39-bbb9-a5642a86ba1c" alt="logo" width="200"/>
+</p>
+<p align="center"> Event Calendar </p>
 
 ## Getting started
 > [!WARNING]
@@ -18,4 +21,5 @@ npm run dev
 - [Vite](https://vite.dev)
 - [Supabase](https://supabase.com)
 - [Vercel](https://vercel.com)
+
 
