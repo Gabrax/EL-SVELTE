@@ -86,13 +86,13 @@
     $: currentPath = $page?.url?.pathname || '';
 </script>
 
-{#if currentPath !== '/' && !currentPath.startsWith('/reset_password')}
+{#if !currentPath.startsWith('/reset_password')}
 <nav class="bg-gradient-to-r from-[#0f172a] to-[#111827] fixed top-0 left-0 right-0 border-b border-pink-500 z-10">
   <div class="navbar max-w-7xl mx-auto px-6 py-3 flex justify-between items-center">
     <!-- Left side of navbar -->
     <div class="flex items-center space-x-4">
       <img src="/logo.svg" alt="Logo" class="w-12 h-12" />
-      <a href="/events" class="text-pink-400 text-xl font-bold hover:text-pink-300 transition">Svelte Calendar</a>
+      <a href="/" class="text-pink-400 text-xl font-bold hover:text-pink-300 transition">Svelte Calendar</a>
       {#if session}
         <a href="/calendar" class="text-white text-lg hover:text-pink-400 transition">My Events</a>
       {/if}
@@ -129,7 +129,7 @@
         <button 
           class="p-2 rounded-full bg-gray-700 hover:bg-gray-600 focus:outline-none transition" 
           title="Login"
-          on:click={() => goto('/')}
+          on:click={() => goto('/login')}
         >
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
           <g fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">

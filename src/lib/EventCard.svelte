@@ -79,36 +79,38 @@
         {event.title}
       </h2>
       
-      <!-- Favorite Button -->
-   <div class="relative">
-  {#if isFavorite}
-    <button 
-      class="text-gray-400 hover:text-pink-500 heart-icon"
-      on:click={handleToggle}
-      title="Remove from favorites"
-    >
-      <i class="fa-solid fa-heart text-pink-500"></i> 
-    </button>
-  {:else}
-    <button 
-      class="text-gray-400 hover:text-pink-500 "
-      on:click={handleToggle}
-      title="Add to favorites"
-    >
-      <i class="fa-regular fa-heart"></i> 
-    </button>
-  {/if}
-</div>
+      {#if currentUserId}
+        <!-- Favorite Button -->
+        <div class="relative">
+          {#if isFavorite}
+            <button 
+              class="text-gray-400 hover:text-pink-500 heart-icon"
+              on:click={handleToggle}
+              title="Remove from favorites"
+            >
+              <i class="fa-solid fa-heart text-pink-500"></i> 
+            </button>
+          {:else}
+            <button 
+              class="text-gray-400 hover:text-pink-500"
+              on:click={handleToggle}
+              title="Add to favorites"
+            >
+              <i class="fa-regular fa-heart"></i> 
+            </button>
+          {/if}
+        </div>
 
-      <!-- Edit Button (Visible only if the current user is the event creator) -->
-      {#if event.user_id === currentUserId}
-        <button 
-          class="text-gray-400 hover:text-blue-500 transition"
-          on:click={openModal}
-          title="Edit event"
-        >
-          <i class="fa-solid fa-edit"></i>  <!-- Pencil icon for editing -->
-        </button>
+        <!-- Edit Button (Visible only if the current user is the event creator) -->
+        {#if event.user_id === currentUserId}
+          <button 
+            class="text-gray-400 hover:text-blue-500 transition"
+            on:click={openModal}
+            title="Edit event"
+          >
+            <i class="fa-solid fa-edit"></i>
+          </button>
+        {/if}
       {/if}
     </div>
 
