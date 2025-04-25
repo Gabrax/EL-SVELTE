@@ -70,7 +70,7 @@
   >
     <!-- Event Header -->
     <div class="flex justify-between items-start">
-      <h3 class="text-lg font-bold text-white-400 mb-2">{event.title}</h3>
+      <h3 class="text-lg font-bold text-white mb-2">{event.title}</h3>
 
       {#if currentUserId}
         <!-- Favorite Button -->
