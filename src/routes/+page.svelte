@@ -257,65 +257,153 @@
   }
 
   async function importCSV(event: Event) {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (!file) return;
+  const file = (event.target as HTMLInputElement).files?.[0];
+  if (!file) return;
 
-    const text = await file.text(); 
-    const rows = parseCSV(text);  
+  const text = await file.text();
+  const rows = parseCSV(text);
 
-    // Wstaw dane do bazy
-    for (const row of rows) {
-      const { title, description, start_date, end_date, location, venue, video_link, user_id } = row;
+  const tmpIdToRealId = new Map<number, number>(); 
+
+
+  for (const row of rows) {
+    const {
+      tmp_id,
+      parent_tmp_id,
+      title,
+      description,
+      start_date,
+      end_date,
+      location,
+      venue,
+      video_link,
+      user_id,
+      event_type,
+      max_places,
+    } = row;
+
+    
+    if (!parent_tmp_id) {
+      const embedUrl = video_link ? convertToEmbedUrl(video_link) : null;
+
+      const { data, error } = await supabase.from('conferences').insert([{
+        title,
+        description,
+        start_date,
+        end_date,
+        location,
+        venue,
+        video_link: embedUrl,
+        user_id,
+        event_type,
+        max_places
+      }]).select('id').single(); 
+
+      if (error || !data) {
+        console.error("Błąd podczas importu wydarzenia głównego:", error?.message);
+        continue;
+      }
+
+      tmpIdToRealId.set(Number(tmp_id), data.id); 
+        }
+  }
+
+  
+  for (const row of rows) {
+    const {
+      tmp_id,
+      parent_tmp_id,
+      title,
+      description,
+      start_date,
+      end_date,
+      location,
+      venue,
+      video_link,
+      user_id,
+      event_type,
+      max_places
+    } = row;
+
+    
+    if (parent_tmp_id) {
+      const parentRealId = tmpIdToRealId.get(Number(parent_tmp_id));
+
+      if (!parentRealId) {
+        console.error(`Nie znaleziono parent_id dla tmp_id=${tmp_id}`);
+        continue;
+      }
 
       const embedUrl = video_link ? convertToEmbedUrl(video_link) : null;
 
-      const { error } = await supabase.from('conferences').insert([
-        {
-          title,
-          description,
-          start_date,
-          end_date,
-          location,
-          venue,
-          video_link: embedUrl,
-          user_id,
-        },
-      ]);
+      const { error } = await supabase.from('conferences').insert([{
+        title,
+        description,
+        start_date,
+        end_date,
+        location,
+        venue,
+        video_link: embedUrl,
+        user_id,
+        parent_id: parentRealId, 
+        event_type,
+        max_places
+      }]);
 
       if (error) {
-        console.error("Błąd podczas importu wydarzenia:", error.message);
-        continue;  
+        console.error("Błąd podczas importu wydarzenia podrzędnego:", error.message);
+        continue;
       }
     }
-
-    await fetchEvents(); 
   }
 
-  function parseCSV(csvText: string): { title: string; description: string; start_date: string; end_date: string; location: string; venue: string; video_link: string | null; user_id: number }[] {
-    const rows = csvText.split("\n").map(row => row.trim()).filter(row => row.length > 0);
-    const header = rows[0].split(",");  
-    const data = rows.slice(1);  
+  await fetchEvents();
+}
 
-    return data.map(row => {
-      const columns = row.split(",").map(col => col.trim());
-      const event: { [key: string]: string } = {};
 
-      header.forEach((col, idx) => {
-        event[col] = columns[idx] || '';  
-      });
+function parseCSV(csvText: string): { 
+  tmp_id: number;
+  parent_tmp_id?: number;
+  title: string;
+  description: string;
+  start_date: string;
+  end_date: string;
+  location: string;
+  venue: string;
+  video_link: string | null;
+  user_id: number;
+  event_type: string;
+  max_places: number;
+}[] {
+  const rows = csvText.split("\n").map(row => row.trim()).filter(row => row.length > 0);
+  const header = rows[0].split(",");
+  const data = rows.slice(1);
 
-      return {
-        title: event['title'],
-        description: event['description'],
-        start_date: event['start_date'],
-        end_date: event['end_date'],
-        location: event['location'],
-        venue: event['venue'],
-        video_link: event['video_link'] || null,
-        user_id: event['user_id'], 
-      };
+  return data.map(row => {
+    const columns = row.split(",").map(col => col.trim());
+    const event: { [key: string]: string } = {};
+
+    header.forEach((col, idx) => {
+      event[col] = columns[idx] || '';
     });
-  }
+
+    return {
+      tmp_id: Number(event['tmp_id']),
+      parent_tmp_id: event['parent_tmp_id'] ? Number(event['parent_tmp_id']) : undefined,
+      title: event['title'],
+      description: event['description'],
+      start_date: event['start_date'],
+      end_date: event['end_date'],
+      location: event['location'],
+      venue: event['venue'],
+      video_link: event['video_link'] || null,
+      user_id: event['user_id'],
+      event_type: event['event_type'],
+      max_places: Number(event['max_places'])
+    };
+  });
+}
+
 
   
 
