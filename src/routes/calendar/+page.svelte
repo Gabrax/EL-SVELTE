@@ -16,6 +16,16 @@
     video_link?: string; // Add video_link as an optional field
   };
 
+  type SubEvent = {
+    id: number;
+    title: string;
+    description: string;
+    parent_id: number;
+    start_date: string;
+    end_date: string;
+};
+
+
   type CalendarDay = {
     day: number;
     weekday: string;
@@ -24,6 +34,7 @@
   };
 
   let events: Event[] = [];
+  let subEvents: SubEvent[] = []; //eventy podrzędne
   let today = new Date();
   let currentMonth = today.getMonth();
   let currentYear = today.getFullYear();
@@ -112,6 +123,29 @@
     }
   }
 
+  async function fetchSubEvents(parentId: number) {
+    try {
+        const { data, error } = await supabase
+            .from("conferences")  // <- zakładam, że Twoje podrzędne eventy są w tabeli conference_events
+            .select("*")
+            .eq("parent_id", parentId);
+
+        if (error) throw error;
+
+        subEvents = data.map((ev) => ({
+            id: ev.id,
+            title: ev.title,
+            parent_id: ev.parent_id,
+            start_date: ev.start_date,
+            end_date: ev.end_date,
+        }));
+    } catch (err) {
+        console.error("Error fetching sub-events:", err);
+    }
+  }
+
+
+
   function generateDates(year: number, month: number): CalendarDay[] {
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const weekdays = ["Nd", "Pn", "Wt", "Śr", "Cz", "Pt", "Sb"];
@@ -163,9 +197,16 @@
   $: myEvents = events;
 
   // Function to handle click on a day
-  function handleDayClick(events: Event[]): void {
-    hoveredEvents = events;
+  async function handleDayClick(events: Event[]): Promise<void> {
+  hoveredEvents = events;
+
+  if (events.length > 0) {
+    await fetchSubEvents(events[0].id);
+  } else {
+    subEvents = []; // czyści subeventy jak kliknie się dzień bez eventów
   }
+}
+
 
   function handleWatchButtonClick(event: Event): void {
     showPopup = true;
@@ -294,7 +335,7 @@
       class={`p-6 bg-[#1e293b] border rounded-lg shadow-lg transition-all duration-300 min-h-[300px] border-pink-500 ${hoveredEvents.length > 0 ? "border-blue-400 shadow-blue-500" : ""}`}
     >
       <h3 class="text-2xl font-bold text-pink-400 mb-4">
-        Szczegóły wydarzenia:
+        Szczegóły konferencji:
       </h3>
       {#if hoveredEvents.length > 0}
         <ul>
@@ -319,6 +360,25 @@
             Watch
           </button>
         {/if}
+        {#if subEvents.length > 0}
+            <div class="mt-4">
+                <h4 class="text-xl font-bold text-white mb-2">Wydarzenia:</h4>
+                <ul class="list-disc ml-5 text-gray-300">
+                    {#each subEvents as sub}
+                        <li>
+                            <strong>{sub.title}</strong><br />
+                            {#if sub.description}
+                                {sub.description}<br />
+                            {/if}
+                            <span class="text-sm text-pink-300">
+                                {formatPolishDateTime(sub.start_date)} - {formatPolishDateTime(sub.end_date)}
+                            </span>
+                        </li>
+                    {/each}
+                </ul>
+            </div>
+        {/if}
+
       {:else}
         <p class="text-gray-500 text-sm">Najedź na dzień z wydarzeniem</p>
       {/if}

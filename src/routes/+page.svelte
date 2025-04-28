@@ -23,6 +23,10 @@
   let userRole: number | null = null;
   let showModal = false;
 
+  let selectedConferenceId: number | null = null;
+  let childEvents: Event[] = [];
+  let showChildModal = false;
+
 
   async function fetchUserRole() {
     if (!session?.user?.id || !supabase) return;
@@ -44,7 +48,11 @@
   async function fetchEvents() {
     if (!supabase) return;
 
-    const { data, error } = await supabase.from('conferences').select('*');
+    const { data, error } = await supabase
+      .from('conferences')
+      .select('*')
+      .is('parent_id', null); // Fetch only main events
+
     if (error) {
       console.error("Error fetching events:", error.message);
       return;
@@ -77,6 +85,34 @@
       venue: e.venue,
       isFavorite: favoriteIds.includes(e.id),
     }));
+  }
+
+  async function fetchChildEvents(conferenceId: number) {
+    if (!supabase) return;
+
+    const { data, error } = await supabase
+      .from('conferences')
+      .select('*')
+      .eq('parent_id', conferenceId);
+
+    if (error) {
+      console.error("Error fetching child events:", error.message);
+      return;
+    }
+
+    childEvents = data.map(e => ({
+      id: e.id,
+      user_id: e.user_id,
+      title: e.title,
+      description: e.description,
+      start_date: e.start_date,
+      end_date: e.end_date,
+      location: e.location,
+      venue: e.venue,
+      isFavorite: false, // Możesz też pobrać ulubione jeśli chcesz
+    }));
+
+    showChildModal = true;
   }
 
 
@@ -412,7 +448,7 @@ function parseCSV(csvText: string): {
 </script>
 
 <div class="w-full min-h-screen bg-gradient-to-b from-[#0f172a] to-[#111827] pt-20 space-y-6 overflow-x-hidden flex flex-col items-center">
-  <h2 class="text-3xl font-bold text-pink-400 text-center">Wydarzenia</h2>
+  <h2 class="text-3xl font-bold text-pink-400 text-center">Konferencje</h2>
   {#if session && userRole !== 0}
   <div class="flex space-x-4 mt-4">
     <button on:click={exportToCSV} class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded">
@@ -433,7 +469,11 @@ function parseCSV(csvText: string): {
     <p class="text-pink-300 text-sm mt-4">Zarejestruj się, aby uczestniczyć</p>
   {/if}
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 px-6 mt-8">
-    {#each events as event} <EventCard {event} onEdit={onEdit} deleteEvent={deleteEvent} {toggleFavorite} currentUserId={session?.user?.id ?? null} /> {/each}
+    {#each events as event}
+      <div on:click={() => { selectedConferenceId = event.id; fetchChildEvents(event.id); }} class="cursor-pointer">
+        <EventCard {event} onEdit={onEdit} deleteEvent={deleteEvent} {toggleFavorite} currentUserId={session?.user?.id ?? null} />
+      </div>
+    {/each}
   </div>
 
   {#if showModal}
@@ -456,5 +496,30 @@ function parseCSV(csvText: string): {
     </div>
   </div>
   {/if}
+
+  {#if showChildModal}
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-gray-900 p-6 rounded-lg shadow-lg w-[90%] max-w-2xl text-white relative">
+      <button on:click={() => { showChildModal = false; selectedConferenceId = null; }} class="absolute top-2 right-2 text-white text-xl">✖</button>
+      <h3 class="text-2xl font-bold mb-4 text-center">Wydarzenia konferencji</h3>
+
+      {#if childEvents.length > 0}
+        <div class="space-y-4">
+          {#each childEvents as child}
+            <div class="p-4 bg-gray-800 rounded">
+              <h4 class="text-xl font-semibold">{child.title}</h4>
+              <p class="text-sm">{child.start_date} - {child.end_date}</p>
+              <p class="text-sm">{child.location} / {child.venue}</p>
+              <p class="text-sm mt-2">{child.description}</p>
+            </div>
+          {/each}
+        </div>
+      {:else}
+        <p class="text-center text-pink-300">Brak wydarzeń dla tej konferencji.</p>
+      {/if}
+    </div>
+  </div>
+  {/if}
+
 </div>
 
