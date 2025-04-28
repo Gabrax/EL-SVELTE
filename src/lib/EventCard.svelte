@@ -11,6 +11,7 @@
     isFavorite: boolean;
   };
 
+  export let subevents_count: number;
   export let toggleFavorite: (id: number) => void;
   export let onEdit: (updatedEvent: typeof event) => void; // Pass the full updated event
   export let currentUserId: number; // The logged-in user's ID
@@ -60,6 +61,14 @@
     isFavorite = !isFavorite;
     toggleFavorite(event.id);
   }
+
+  // Format subevents text based on count
+  function formatSubeventsText(count: number): string {
+  if (count === 0) return "Brak wydarzeń podczas konferencji";
+  if (count === 1) return "1 wydarzenie podczas konferencji";
+  if (count >= 2 && count <= 4) return `${count} wydarzenia podczas konferencji`;
+  return `${count} wydarzeń podczas konferencji`;
+  }
 </script>
 
 <div
@@ -71,7 +80,7 @@
     <!-- Event Header -->
     <div class="flex justify-between items-start">
       <h3 class="text-lg font-bold text-white mb-2">{event.title}</h3>
-
+      <p class="text-sm text-gray-400 mt-1">{formatSubeventsText(subevents_count)}</p>
       {#if currentUserId}
         <!-- Favorite Button -->
         <div class="relative">

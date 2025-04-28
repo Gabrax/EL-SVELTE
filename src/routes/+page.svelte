@@ -50,8 +50,13 @@
 
     const { data, error } = await supabase
       .from('conferences')
-      .select('*')
-      .is('parent_id', null); // Fetch only main events
+      .select(`
+        *,
+        subevents:conferences(
+          id
+        )
+      `)
+      .is('parent_id', null); // pobieraj tylko główne konferencje (jeśli masz parent_id)
 
     if (error) {
       console.error("Error fetching events:", error.message);
@@ -84,6 +89,7 @@
       location: e.location,
       venue: e.venue,
       isFavorite: favoriteIds.includes(e.id),
+      subevents_count: e.subevents?.length ?? 0,
     }));
   }
 
@@ -471,7 +477,7 @@ function parseCSV(csvText: string): {
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 px-6 mt-8">
     {#each events as event}
       <div on:click={() => { selectedConferenceId = event.id; fetchChildEvents(event.id); }} class="cursor-pointer">
-        <EventCard {event} onEdit={onEdit} deleteEvent={deleteEvent} {toggleFavorite} currentUserId={session?.user?.id ?? null} />
+        <EventCard {event} onEdit={onEdit} deleteEvent={deleteEvent} {toggleFavorite} currentUserId={session?.user?.id ?? null}   subevents_count={event.subevents_count}/>
       </div>
     {/each}
   </div>
