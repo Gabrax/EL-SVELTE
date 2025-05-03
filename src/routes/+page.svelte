@@ -130,6 +130,31 @@
     return match ? `https://www.youtube.com/embed/${match[1]}` : url;
   }
 
+  function formatPolishDateTime(dateString: string): string {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const months = [
+      "stycznia",
+      "lutego",
+      "marca",
+      "kwietnia",
+      "maja",
+      "czerwca",
+      "lipca",
+      "sierpnia",
+      "września",
+      "października",
+      "listopada",
+      "grudnia",
+    ];
+    const day = date.getDate();
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    return `${day} ${month} ${year} ${hours}:${minutes}`;
+  }
+
   async function toggleFavorite(eventId: number): Promise<void> {
     const event = events.find(e => e.id === eventId);
     if (!event || !session?.user?.id) return;
@@ -531,28 +556,44 @@ function parseCSV(csvText: string): {
   {/if}
 
   {#if showChildModal}
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-gray-900 p-6 rounded-lg shadow-lg w-[90%] max-w-2xl text-white relative">
-      <button on:click={() => { showChildModal = false; selectedConferenceId = null; }} class="absolute top-2 right-2 text-white text-xl">✖</button>
-      <h3 class="text-2xl font-bold mb-4 text-center">Wydarzenia konferencji</h3>
+  <div class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+    <div class="group relative p-[1px] rounded-2xl bg-gradient-to-tr from-purple-500 via-pink-500 to-blue-500 w-[90%] max-w-2xl transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+      <div class="bg-[#0f172a] rounded-2xl p-6 text-white relative">
+        <button
+          on:click={() => { showChildModal = false; selectedConferenceId = null; }}
+          class="absolute top-3 right-3 text-gray-400 hover:text-pink-500 text-xl transition"
+          title="Zamknij"
+        >✖</button>
 
-      {#if childEvents.length > 0}
-        <div class="space-y-4">
+        <h3 class="text-2xl font-bold mb-6 text-center">Wydarzenia konferencji</h3>
+
+        {#if childEvents.length > 0}
+        <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-pink-500 scrollbar-track-transparent">
           {#each childEvents as child}
-            <div class="p-4 bg-gray-800 rounded">
-              <h4 class="text-xl font-semibold">{child.title}</h4>
-              <p class="text-sm">{child.start_date} - {child.end_date}</p>
-              <p class="text-sm">{child.location} / {child.venue}</p>
-              <p class="text-sm mt-2">{child.description}</p>
+            <div class="bg-gray-800/60 rounded-xl p-4 shadow hover:shadow-lg transition">
+              <h4 class="text-lg font-semibold text-pink-400 mb-2">{child.title}</h4>
+
+              <div class="text-sm text-gray-300 mb-1">
+                📅 {formatPolishDateTime(child.start_date)} - {formatPolishDateTime(child.end_date)}
+              </div>
+              <div class="text-sm text-gray-300 mb-2">
+                📍 {child.location} / {child.venue}
+              </div>
+
+              <p class="text-sm text-gray-400">{child.description}</p>
             </div>
           {/each}
         </div>
       {:else}
-        <p class="text-center text-pink-300">Brak wydarzeń dla tej konferencji.</p>
+        <p class="text-center text-pink-300 text-sm">Brak wydarzeń dla tej konferencji.</p>
       {/if}
+      </div>
     </div>
   </div>
-  {/if}
+{/if}
+
+
+
 
 </div>
 

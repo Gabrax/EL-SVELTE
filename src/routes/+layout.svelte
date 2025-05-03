@@ -139,34 +139,71 @@
 {/if}
 
 {#if isModalOpen}
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-20">
-    <div class="bg-gray-900 p-6 rounded-lg shadow-lg w-[90%] max-w-md text-white relative">
-      <h3 class="text-xl font-bold mb-4 text-center">Edytuj Profil</h3>
-      <form>
-        <div class="mb-4">
-          <label class="block">Imię</label>
-          <input type="text" class="p-2 rounded bg-gray-800 text-white w-full" bind:value={userProfile.first_name} />
-        </div>
-        <div class="mb-4">
-          <label class="block">Nazwisko</label>
-          <input type="text" class="p-2 rounded bg-gray-800 text-white w-full" bind:value={userProfile.last_name} />
-        </div>
-        <div class="mb-4">
-          <label class="block">Organizacja</label>
-          <input type="text" class="p-2 rounded bg-gray-800 text-white w-full" bind:value={userProfile.organization} />
-        </div>
-        <div class="flex justify-between mt-6">
+  <div class="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50">
+    <div class="group relative p-[1px] rounded-2xl bg-gradient-to-tr from-purple-500 via-pink-500 to-blue-500 w-[90%] max-w-md transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+      <div class="bg-[#0f172a] rounded-2xl p-6 text-white relative">
+        <h3 class="text-2xl font-bold mb-6 text-center text-pink-400">Edytuj Profil</h3>
+
+        <form class="space-y-4">
           <div>
-            <button class="bg-red-600 hover:bg-red-800 text-white font-bold py-2 px-4 rounded mt-2" on:click={deleteAccount}>Usuń konto</button>
+            <label class="block text-sm text-gray-400 mb-1">Imię</label>
+            <input
+              type="text"
+              bind:value={userProfile.first_name}
+              class="w-full p-2 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-pink-500 transition"
+            />
           </div>
-          <div class="space-x-4 mt-2">
-            <button type="button" class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded" on:click={updateProfile}>Zapisz</button>
-            <button type="button" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" on:click={() => (isModalOpen = false)}>Anuluj</button>
+
+          <div>
+            <label class="block text-sm text-gray-400 mb-1">Nazwisko</label>
+            <input
+              type="text"
+              bind:value={userProfile.last_name}
+              class="w-full p-2 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-pink-500 transition"
+            />
           </div>
-        </div>
-      </form>
+
+          <div>
+            <label class="block text-sm text-gray-400 mb-1">Organizacja</label>
+            <input
+              type="text"
+              bind:value={userProfile.organization}
+              class="w-full p-2 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-pink-500 transition"
+            />
+          </div>
+
+          <div class="flex justify-between items-center pt-4 border-t border-gray-700 mt-6">
+            <button
+              type="button"
+              class="text-red-400 hover:text-red-600 text-sm"
+              on:click={deleteAccount}
+              title="Usuń konto"
+            >
+              🗑 Usuń konto
+            </button>
+
+            <div class="space-x-2">
+              <button
+                type="button"
+                class="bg-pink-600 hover:bg-pink-700 text-white font-semibold py-2 px-4 rounded-lg transition"
+                on:click={updateProfile}
+              >
+                Zapisz
+              </button>
+              <button
+                type="button"
+                class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition"
+                on:click={() => (isModalOpen = false)}
+              >
+                Anuluj
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 {/if}
+
 
 <slot></slot>
