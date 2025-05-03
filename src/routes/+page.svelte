@@ -259,11 +259,22 @@
       events = events.filter(e => e.id !== eventId);
     }
 
-  function convertToCSV(events: Event[]): string {
-    const header = ["id", "title", "description", "start_date", "end_date", "location", "venue", "video_link", "user_id"];
-    
-    const rows = events.map(event => [
-      event.id,
+    function convertToCSV(allEvents: any[]): string {
+  const header = ["tmp_id", "parent_tmp_id", "title", "description", "start_date", "end_date", "location", "venue", "video_link", "user_id", "event_type", "max_places"];
+
+
+  const idMap = new Map<number, number>();
+  let tmpIdCounter = 1;
+  allEvents.forEach(event => {
+    idMap.set(event.id, tmpIdCounter++);
+  });
+
+  const rows = allEvents.map(event => {
+    const tmp_id = idMap.get(event.id);
+    const parent_tmp_id = event.parent_id ? idMap.get(event.parent_id) : '';
+    return [
+      tmp_id,
+      parent_tmp_id,
       event.title,
       event.description,
       event.start_date,
@@ -271,41 +282,64 @@
       event.location,
       event.venue,
       event.video_link || '',
-      event.user_id
-    ].map(val => String(val).replace(/[\n\r,]/g, ' '))); 
+      event.user_id,
+      event.event_type || '',   
+      event.max_places || 0
+    ].map(val => String(val).replace(/[\n\r,]/g, ' '));
+  });
 
-    const csvContent = [
-      header.join(","),           
-      ...rows.map(row => row.join(","))  
-    ].join("\n");
+  const csvContent = [
+    header.join(","),
+    ...rows.map(row => row.join(","))
+  ].join("\n");
 
-    return csvContent;
+  return csvContent;
+}
+
+
+async function exportToCSV() {
+  if (!supabase) return;
+
+  const { data: allEvents, error } = await supabase
+    .from('conferences')
+    .select('*');
+
+  if (error) {
+    console.error("Error exporting events:", error.message);
+    return;
   }
 
-  function exportToCSV() {
-    const csvContent = convertToCSV(events);
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
+  const csvContent = convertToCSV(allEvents);
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
 
-    if (link.download !== undefined) {
-      const url = URL.createObjectURL(blob);
-      link.setAttribute("href", url);
-      link.setAttribute("download", "wydarzenia.csv");
-      link.style.visibility = "hidden";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
+  if (link.download !== undefined) {
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", "wydarzenia.csv");
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
+}
 
-  async function importCSV(event: Event) {
+async function importCSV(event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0];
   if (!file) return;
 
   const text = await file.text();
   const rows = parseCSV(text);
 
-  const tmpIdToRealId = new Map<number, number>(); 
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) {
+    console.error("Błąd podczas pobierania użytkownika:", userError?.message);
+    return;
+  }
+
+  const currentUserId = user.id;
+
+  const tmpIdToRealId = new Map<number, number>();
 
 
   for (const row of rows) {
@@ -319,12 +353,10 @@
       location,
       venue,
       video_link,
-      user_id,
       event_type,
       max_places,
     } = row;
 
-    
     if (!parent_tmp_id) {
       const embedUrl = video_link ? convertToEmbedUrl(video_link) : null;
 
@@ -336,21 +368,20 @@
         location,
         venue,
         video_link: embedUrl,
-        user_id,
+        user_id: currentUserId, 
         event_type,
         max_places
-      }]).select('id').single(); 
+      }]).select('id').single();
 
       if (error || !data) {
         console.error("Błąd podczas importu wydarzenia głównego:", error?.message);
         continue;
       }
 
-      tmpIdToRealId.set(Number(tmp_id), data.id); 
-        }
+      tmpIdToRealId.set(Number(tmp_id), data.id);
+    }
   }
 
-  
   for (const row of rows) {
     const {
       tmp_id,
@@ -362,12 +393,10 @@
       location,
       venue,
       video_link,
-      user_id,
       event_type,
       max_places
     } = row;
 
-    
     if (parent_tmp_id) {
       const parentRealId = tmpIdToRealId.get(Number(parent_tmp_id));
 
@@ -386,8 +415,8 @@
         location,
         venue,
         video_link: embedUrl,
-        user_id,
-        parent_id: parentRealId, 
+        user_id: currentUserId, 
+        parent_id: parentRealId,
         event_type,
         max_places
       }]);
@@ -402,8 +431,7 @@
   await fetchEvents();
 }
 
-
-function parseCSV(csvText: string): { 
+function parseCSV(csvText: string): {
   tmp_id: number;
   parent_tmp_id?: number;
   title: string;
@@ -413,7 +441,6 @@ function parseCSV(csvText: string): {
   location: string;
   venue: string;
   video_link: string | null;
-  user_id: number;
   event_type: string;
   max_places: number;
 }[] {
@@ -439,12 +466,12 @@ function parseCSV(csvText: string): {
       location: event['location'],
       venue: event['venue'],
       video_link: event['video_link'] || null,
-      user_id: event['user_id'],
       event_type: event['event_type'],
       max_places: Number(event['max_places'])
     };
   });
 }
+
 
 
   
