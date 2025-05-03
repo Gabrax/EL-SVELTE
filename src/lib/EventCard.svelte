@@ -87,7 +87,7 @@
           {#if isFavorite}
             <button
               class="text-gray-400 hover:text-pink-500 heart-icon"
-              on:click={handleToggle}
+              on:click={(event) => { event.stopPropagation(); handleToggle(); }}
               title="Remove from favorites"
             >
               <i class="fa-solid fa-heart text-pink-500"></i>
@@ -95,7 +95,7 @@
           {:else}
             <button
               class="text-gray-400 hover:text-pink-500"
-              on:click={handleToggle}
+              on:click={(event) => { event.stopPropagation(); handleToggle(); }}
               title="Add to favorites"
             >
               <i class="fa-regular fa-heart"></i>
