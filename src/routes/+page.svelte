@@ -91,6 +91,18 @@
       isFavorite: favoriteIds.includes(e.id),
       subevents_count: e.subevents?.length ?? 0,
     }));
+
+    //sprawdzanie, czy wydarzenie jest starsze niż 14 dni
+    //jeśli tak, to nie pokazuj go w liście wydarzeń
+    const now = new Date();
+    events = events.filter(event => {
+      const endDate = new Date(event.end_date);
+      const diffInDays = (now.getTime() - endDate.getTime()) / (1000 * 60 * 60 * 24);
+      return diffInDays <= 14;
+    });
+    
+    //sortuj wydarzenia po dacie rozpoczęcia
+    events.sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime() || new Date(a.end_date).getTime() - new Date(b.end_date).getTime()); 
   }
 
   async function fetchChildEvents(conferenceId: number) {
@@ -115,7 +127,7 @@
       end_date: e.end_date,
       location: e.location,
       venue: e.venue,
-      isFavorite: false, // Możesz też pobrać ulubione jeśli chcesz
+      isFavorite: false, 
     }));
 
     showChildModal = true;
@@ -535,25 +547,73 @@ function parseCSV(csvText: string): {
   </div>
 
   {#if showModal}
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-gray-900 p-6 rounded-lg shadow-lg w-[90%] max-w-md text-white relative">
-      <button on:click={() => showModal = false} class="absolute top-2 right-2 text-white text-xl">✖</button>
-      <h3 class="text-xl font-bold mb-4 text-center">Dodaj nowe wydarzenie</h3>
-      <div class="flex flex-col gap-3">
-        <input bind:value={newEvent.title} placeholder="Tytuł wydarzenia" class="p-2 rounded bg-gray-800 text-white" />
-        <input bind:value={newEvent.description} placeholder="Opis" class="p-2 rounded bg-gray-800 text-white" />
-        <input type="date" bind:value={newEvent.start_date} class="p-2 rounded bg-gray-800 text-white" />
-        <input type="date" bind:value={newEvent.end_date} class="p-2 rounded bg-gray-800 text-white" />
-        <input bind:value={newEvent.location} placeholder="Miasto" class="p-2 rounded bg-gray-800 text-white" />
-        <input bind:value={newEvent.venue} placeholder="Venue" class="p-2 rounded bg-gray-800 text-white" />
-        <input bind:value={newEvent.video_link} placeholder="Opcjonalny link YouTube" class="p-2 rounded bg-gray-800 text-white" />
-        <button on:click={() => { addEvent(); showModal = false; }} class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded">
-          Dodaj wydarzenie
-        </button>
+  <div class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+    <div class="group relative p-[1px] rounded-2xl bg-gradient-to-tr from-purple-500 via-pink-500 to-blue-500 w-[90%] max-w-md transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+      <div class="bg-[#0f172a] rounded-2xl p-6 text-white relative">
+        <button
+          on:click={() => showModal = false}
+          class="absolute top-3 right-3 text-gray-400 hover:text-pink-500 text-xl transition"
+          title="Zamknij"
+        >✖</button>
+
+        <h3 class="text-2xl font-bold mb-6 text-center text-pink-400">Dodaj nowe wydarzenie</h3>
+
+        <div class="flex flex-col gap-4">
+          <input
+            bind:value={newEvent.title}
+            placeholder="Tytuł wydarzenia"
+            class="p-2 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-pink-500"
+          />
+
+          <input
+            bind:value={newEvent.description}
+            placeholder="Opis"
+            class="p-2 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-pink-500"
+          />
+
+          <div class="flex gap-2">
+            <input
+              type="date"
+              bind:value={newEvent.start_date}
+              class="w-1/2 p-2 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-pink-500"
+            />
+            <input
+              type="date"
+              bind:value={newEvent.end_date}
+              class="w-1/2 p-2 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-pink-500"
+            />
+          </div>
+
+          <input
+            bind:value={newEvent.location}
+            placeholder="Miasto"
+            class="p-2 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-pink-500"
+          />
+
+          <input
+            bind:value={newEvent.venue}
+            placeholder="Miejsce"
+            class="p-2 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-pink-500"
+          />
+
+          <input
+            bind:value={newEvent.video_link}
+            placeholder="Opcjonalny link YouTube"
+            class="p-2 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-pink-500"
+          />
+
+          <button
+            on:click={() => { addEvent(); showModal = false; }}
+            class="bg-pink-600 hover:bg-pink-700 text-white font-semibold py-2 px-4 rounded-lg transition"
+          >
+            Dodaj wydarzenie
+          </button>
+        </div>
       </div>
     </div>
   </div>
   {/if}
+
 
   {#if showChildModal}
   <div class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">

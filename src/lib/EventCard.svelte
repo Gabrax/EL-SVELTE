@@ -20,6 +20,8 @@
 
   let isModalOpen = false;
   let updatedEvent = { ...event };
+  let attendeesCount = 15; // na razie na sztywno, później można podmienić
+  let attendeesLimit = 30; // na razie na sztywno, później można podmienić
 
   // Format date
   function formatDateTime(dateString: string): string {
@@ -32,6 +34,11 @@
       hour: "2-digit",
       minute: "2-digit",
     });
+  }
+
+  //sprawdzanie, czy wydarzenie już się odbyło
+  function isPastEvent(endDate: string): boolean {
+    return new Date(endDate) < new Date();
   }
 
   // Open and close the modal
@@ -72,7 +79,7 @@
 </script>
 
 <div
-  class="group relative p-[1px] rounded-2xl bg-gradient-to-tr from-purple-500 via-pink-500 to-blue-500 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+class={`group relative p-[1px] rounded-2xl bg-gradient-to-tr from-purple-500 via-pink-500 to-blue-500 transition-all duration-300 hover:scale-105 hover:shadow-2xl ${isPastEvent(event.end_date) ? 'opacity-50' : ''}`}
 >
   <div
     class="bg-[#0f172a] rounded-2xl pt-2 pb-5 px-5 h-full flex flex-col justify-between"
@@ -128,6 +135,9 @@
         🏛 {event.venue}
       </span>
     </div>
+
+    <!-- New: Attendees Count (podmienić ilość uczestników) --> 
+    <p class="text-sm text-gray-300 mt-4">Zapisani uczestnicy: {attendeesCount}/{attendeesLimit}</p>
 
     <!-- Event Description -->
     <p class="text-gray-400 mt-4 line-clamp-2">
