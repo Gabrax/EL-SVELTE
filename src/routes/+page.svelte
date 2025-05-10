@@ -22,10 +22,58 @@
   let events: Event[] = [];
   let userRole: number | null = null;
   let showModal = false;
+  let showAddChildModal = false;
 
   let selectedConferenceId: number | null = null;
   let childEvents: Event[] = [];
   let showChildModal = false;
+let newChildEvent = {
+  title: "",
+  description: "",
+  start_date: "",
+  end_date: "",
+  location: "",
+  venue: "",
+};
+
+async function addChildEvent() {
+  if (!newChildEvent.title || !newChildEvent.start_date || !newChildEvent.end_date || !newChildEvent.location || !newChildEvent.venue) {
+    return;
+  }
+  
+
+  const userId = session.user.id;
+
+  const { error } = await supabase.from('conferences').insert([{
+    user_id: userId,
+    title: newChildEvent.title,
+    description: newChildEvent.description,
+    start_date: newChildEvent.start_date,
+    end_date: newChildEvent.end_date,
+    location: newChildEvent.location,
+    venue: newChildEvent.venue,
+    parent_id: selectedConferenceId,  // Link this child event to the selected conference
+  }]);
+
+  if (error) {
+    console.error("Error adding child event:", error.message);
+    return;
+  }
+
+  // Fetch the updated list of child events after adding the new one
+  await fetchChildEvents(selectedConferenceId);
+
+  newChildEvent = {
+    title: "",
+    description: "",
+    start_date: "",
+    end_date: "",
+    location: "",
+    venue: "",
+  };
+}
+
+  
 
 
   async function fetchUserRole() {
@@ -166,6 +214,20 @@
     const minutes = date.getMinutes().toString().padStart(2, "0");
     return `${day} ${month} ${year} ${hours}:${minutes}`;
   }
+async function deleteChildEvent(childEventId: number) {
+  const { error } = await supabase
+    .from('conferences')
+    .delete()
+    .match({ id: childEventId });
+
+  if (error) {
+    console.error("Error deleting child event:", error.message);
+    return;
+  }
+
+  // Aktualizuj lokalną listę podwydarzeń
+  childEvents = childEvents.filter(e => e.id !== childEventId);
+}
 
   async function toggleFavorite(eventId: number): Promise<void> {
     const event = events.find(e => e.id === eventId);
@@ -615,43 +677,127 @@ function parseCSV(csvText: string): {
   {/if}
 
 
-  {#if showChildModal}
+{#if showChildModal}
   <div class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
     <div class="group relative p-[1px] rounded-2xl bg-gradient-to-tr from-purple-500 via-pink-500 to-blue-500 w-[90%] max-w-2xl transition-all duration-300 hover:scale-105 hover:shadow-2xl">
       <div class="bg-[#0f172a] rounded-2xl p-6 text-white relative">
+        
         <button
           on:click={() => { showChildModal = false; selectedConferenceId = null; }}
           class="absolute top-3 right-3 text-gray-400 hover:text-pink-500 text-xl transition"
           title="Zamknij"
         >✖</button>
 
-        <h3 class="text-2xl font-bold mb-6 text-center">Wydarzenia konferencji</h3>
+        <div class="flex items-center mb-6">
+          <h3 class="text-2xl font-bold mr-4">Wydarzenia konferencji</h3>
+          {#if session && userRole !== 0}
+          <button
+            on:click={() => { showAddChildModal = true; }}
+            class="bg-pink-500 text-white px-3 py-1 rounded-full hover:bg-pink-600 transition"
+            title="Dodaj pod wydarzenie"
+          >
+            Dodaj pod wydarzenie
+          </button>
+          {/if}
+        </div>
 
         {#if childEvents.length > 0}
-        <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-pink-500 scrollbar-track-transparent">
-          {#each childEvents as child}
-            <div class="bg-gray-800/60 rounded-xl p-4 shadow hover:shadow-lg transition">
-              <h4 class="text-lg font-semibold text-pink-400 mb-2">{child.title}</h4>
+          <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-pink-500 scrollbar-track-transparent">
+            {#each childEvents as child}
+              <div class="bg-gray-800/60 rounded-xl p-4 shadow hover:shadow-lg transition relative">
+              {#if session && userRole !== 0}
+                <button 
+                  on:click={() => deleteChildEvent(child.id)}
+                  class="absolute top-2 right-2 text-red-400 hover:text-red-600 text-lg"
+                  title="Usuń podwydarzenie"
+                >🗑️</button>
+                {/if}
 
-              <div class="text-sm text-gray-300 mb-1">
-                📅 {formatPolishDateTime(child.start_date)} - {formatPolishDateTime(child.end_date)}
-              </div>
-              <div class="text-sm text-gray-300 mb-2">
-                📍 {child.location} / {child.venue}
-              </div>
+                <h4 class="text-lg font-semibold text-pink-400 mb-2">{child.title}</h4>
 
-              <p class="text-sm text-gray-400">{child.description}</p>
-            </div>
-          {/each}
-        </div>
-      {:else}
-        <p class="text-center text-pink-300 text-sm">Brak wydarzeń dla tej konferencji.</p>
-      {/if}
+                <div class="text-sm text-gray-300 mb-1">
+                  📅 {formatPolishDateTime(child.start_date)} – {formatPolishDateTime(child.end_date)}
+                </div>
+                <div class="text-sm text-gray-300 mb-2">
+                  📍 {child.location} / {child.venue}
+                </div>
+
+                <p class="text-sm text-gray-400">{child.description}</p>
+              </div>
+            {/each}
+          </div>
+        {:else}
+          <p class="text-gray-400 text-center">Brak podwydarzeń.</p>
+        {/if}
       </div>
     </div>
   </div>
 {/if}
 
+
+
+
+{#if showAddChildModal}
+  <div class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+    <div class="group relative p-[1px] rounded-2xl bg-gradient-to-tr from-purple-500 via-pink-500 to-blue-500 w-[90%] max-w-md transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+      <div class="bg-[#0f172a] rounded-2xl p-6 text-white relative">
+        <button
+          on:click={() => showAddChildModal = false}
+          class="absolute top-3 right-3 text-gray-400 hover:text-pink-500 text-xl transition"
+          title="Zamknij"
+        >✖</button>
+
+        <h3 class="text-2xl font-bold mb-6 text-center text-pink-400">Dodaj pod wydarzenie</h3>
+
+        <div class="flex flex-col gap-4">
+          <input
+            bind:value={newChildEvent.title}
+            placeholder="Tytuł wydarzenia"
+            class="p-2 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-pink-500"
+          />
+
+          <input
+            bind:value={newChildEvent.description}
+            placeholder="Opis"
+            class="p-2 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-pink-500"
+          />
+
+          <div class="flex gap-2">
+            <input
+              type="date"
+              bind:value={newChildEvent.start_date}
+              class="w-1/2 p-2 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-pink-500"
+            />
+            <input
+              type="date"
+              bind:value={newChildEvent.end_date}
+              class="w-1/2 p-2 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-pink-500"
+            />
+          </div>
+
+          <input
+            bind:value={newChildEvent.location}
+            placeholder="Miasto"
+            class="p-2 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-pink-500"
+          />
+
+          <input
+            bind:value={newChildEvent.venue}
+            placeholder="Miejsce"
+            class="p-2 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-pink-500"
+          />
+
+          <button
+            on:click={() => { addChildEvent(); showAddChildModal = false; }}
+            class="bg-pink-600 hover:bg-pink-700 text-white font-semibold py-2 px-4 rounded-lg transition"
+          >
+            Dodaj pod wydarzenie
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+{/if}
 
 
 
