@@ -359,7 +359,7 @@ async function deleteChildEvent(childEventId: number) {
     }
 
     function convertToCSV(allEvents: any[]): string {
-  const header = ["tmp_id", "parent_tmp_id", "title", "description", "start_date", "end_date", "location", "venue", "video_link", "user_id", "event_type", "max_places"];
+  const header = ["conference key", "parent key", "title", "description", "start date", "end date", "location", "venue", "video link", "user id", "event type", "max places"];
 
 
   const idMap = new Map<number, number>();
@@ -384,15 +384,16 @@ async function deleteChildEvent(childEventId: number) {
       event.user_id,
       event.event_type || '',   
       event.max_places || 0
-    ].map(val => String(val).replace(/[\n\r,]/g, ' '));
+    ].map(val => String(val).replace(/[\n]/g, ' '));
   });
 
-  const csvContent = [
-    header.join(","),
-    ...rows.map(row => row.join(","))
-  ].join("\n");
+ const csvContent = "\uFEFF" + [
+  header.join(";"),
+  ...rows.map(row => row.join(";"))
+].join("\n");
 
-  return csvContent;
+return csvContent;
+
 }
 
 
@@ -544,11 +545,11 @@ function parseCSV(csvText: string): {
   max_places: number;
 }[] {
   const rows = csvText.split("\n").map(row => row.trim()).filter(row => row.length > 0);
-  const header = rows[0].split(",");
+  const header = rows[0].split(";");
   const data = rows.slice(1);
 
   return data.map(row => {
-    const columns = row.split(",").map(col => col.trim());
+    const columns = row.split(";").map(col => col.trim());
     const event: { [key: string]: string } = {};
 
     header.forEach((col, idx) => {
@@ -556,17 +557,17 @@ function parseCSV(csvText: string): {
     });
 
     return {
-      tmp_id: Number(event['tmp_id']),
-      parent_tmp_id: event['parent_tmp_id'] ? Number(event['parent_tmp_id']) : undefined,
+      tmp_id: Number(event['conference key']),
+      parent_tmp_id: event['parent key'] ? Number(event['parent key']) : undefined,
       title: event['title'],
       description: event['description'],
-      start_date: event['start_date'],
-      end_date: event['end_date'],
+      start_date: event['start date'],
+      end_date: event['end date'],
       location: event['location'],
       venue: event['venue'],
-      video_link: event['video_link'] || null,
-      event_type: event['event_type'],
-      max_places: Number(event['max_places'])
+      video_link: event['video link'] || null,
+      event_type: event['event type'],
+      max_places: Number(event['max places'])
     };
   });
 }
