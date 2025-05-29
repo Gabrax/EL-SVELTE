@@ -52,7 +52,7 @@ async function addChildEvent() {
     end_date: newChildEvent.end_date,
     location: newChildEvent.location,
     venue: newChildEvent.venue,
-    parent_id: selectedConferenceId,  // Link this child event to the selected conference
+    parent_id: selectedConferenceId,  
   }]);
 
   if (error) {
@@ -60,7 +60,7 @@ async function addChildEvent() {
     return;
   }
 
-  // Fetch the updated list of child events after adding the new one
+  
   await fetchChildEvents(selectedConferenceId);
 
   newChildEvent = {
@@ -593,7 +593,7 @@ function parseCSV(csvText: string): {
     </label>
 
     <button on:click={() => showModal = true} class="bg-pink-500 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded">
-      Dodaj wydarzenie
+      Dodaj Konferencje
     </button>
   </div>
   {/if}
@@ -618,12 +618,12 @@ function parseCSV(csvText: string): {
           title="Zamknij"
         >✖</button>
 
-        <h3 class="text-2xl font-bold mb-6 text-center text-pink-400">Dodaj nowe wydarzenie</h3>
+        <h3 class="text-2xl font-bold mb-6 text-center text-pink-400">Dodaj nowe konferencje</h3>
 
         <div class="flex flex-col gap-4">
           <input
             bind:value={newEvent.title}
-            placeholder="Tytuł wydarzenia"
+            placeholder="Tytuł Konferencji" 
             class="p-2 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-pink-500"
           />
 
@@ -668,7 +668,7 @@ function parseCSV(csvText: string): {
             on:click={() => { addEvent(); showModal = false; }}
             class="bg-pink-600 hover:bg-pink-700 text-white font-semibold py-2 px-4 rounded-lg transition"
           >
-            Dodaj wydarzenie
+            Dodaj Konferencje
           </button>
         </div>
       </div>
@@ -694,9 +694,9 @@ function parseCSV(csvText: string): {
           <button
             on:click={() => { showAddChildModal = true; }}
             class="bg-pink-500 text-white px-3 py-1 rounded-full hover:bg-pink-600 transition"
-            title="Dodaj pod wydarzenie"
+            title="Dodaj wydarzenie"
           >
-            Dodaj pod wydarzenie
+            Dodaj wydarzenie
           </button>
           {/if}
         </div>
@@ -709,7 +709,7 @@ function parseCSV(csvText: string): {
                 <button 
                   on:click={() => deleteChildEvent(child.id)}
                   class="absolute top-2 right-2 text-red-400 hover:text-red-600 text-lg"
-                  title="Usuń podwydarzenie"
+                  title="Usuń wydarzenie"
                 >🗑️</button>
                 {/if}
 
@@ -727,7 +727,7 @@ function parseCSV(csvText: string): {
             {/each}
           </div>
         {:else}
-          <p class="text-gray-400 text-center">Brak podwydarzeń.</p>
+          <p class="text-gray-400 text-center">Brak wydarzeń.</p>
         {/if}
       </div>
     </div>
@@ -747,7 +747,7 @@ function parseCSV(csvText: string): {
           title="Zamknij"
         >✖</button>
 
-        <h3 class="text-2xl font-bold mb-6 text-center text-pink-400">Dodaj pod wydarzenie</h3>
+        <h3 class="text-2xl font-bold mb-6 text-center text-pink-400">Dodaj wydarzenie</h3>
 
         <div class="flex flex-col gap-4">
           <input
@@ -791,7 +791,7 @@ function parseCSV(csvText: string): {
             on:click={() => { addChildEvent(); showAddChildModal = false; }}
             class="bg-pink-600 hover:bg-pink-700 text-white font-semibold py-2 px-4 rounded-lg transition"
           >
-            Dodaj pod wydarzenie
+            Dodaj wydarzenie
           </button>
         </div>
       </div>

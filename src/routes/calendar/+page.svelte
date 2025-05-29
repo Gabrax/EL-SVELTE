@@ -126,7 +126,7 @@
   async function fetchSubEvents(parentId: number) {
     try {
         const { data, error } = await supabase
-            .from("conferences")  // <- zakładam, że Twoje podrzędne eventy są w tabeli conference_events
+            .from("conferences")  
             .select("*")
             .eq("parent_id", parentId);
 

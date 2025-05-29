@@ -17,6 +17,8 @@
   export let currentUserId: number; // The logged-in user's ID
   export let deleteEvent: (id: number) => void; // Function to handle event deletion
   let isFavorite = event.isFavorite;
+  let unlikeAnimating = false;
+
 
   let isModalOpen = false;
   let updatedEvent = { ...event };
@@ -64,10 +66,20 @@
   }
 
   // Handle toggling favorite
-  function handleToggle(): void {
+function handleToggle(): void {
+  if (isFavorite) {
+    unlikeAnimating = true;
+    setTimeout(() => {
+      unlikeAnimating = false;
+      isFavorite = !isFavorite;
+      toggleFavorite(event.id);
+    }, 400); // czas animacji
+  } else {
     isFavorite = !isFavorite;
     toggleFavorite(event.id);
   }
+}
+
 
   // Format subevents text based on count
   function formatSubeventsText(count: number): string {
@@ -91,23 +103,24 @@ class={`group relative p-[1px] rounded-2xl bg-gradient-to-tr from-purple-500 via
       {#if currentUserId}
         <!-- Favorite Button -->
         <div class="relative">
-          {#if isFavorite}
-            <button
-              class="text-gray-400 hover:text-pink-500 heart-icon"
-              on:click={(event) => { event.stopPropagation(); handleToggle(); }}
-              title="Remove from favorites"
-            >
-              <i class="fa-solid fa-heart text-pink-500"></i>
-            </button>
-          {:else}
-            <button
-              class="text-gray-400 hover:text-pink-500"
-              on:click={(event) => { event.stopPropagation(); handleToggle(); }}
-              title="Add to favorites"
-            >
-              <i class="fa-regular fa-heart"></i>
-            </button>
-          {/if}
+      {#if isFavorite}
+  <button
+    class={`text-gray-400 hover:text-pink-500 ${unlikeAnimating ? 'unlike-animation' : 'heart-icon'}`}
+    on:click={(event) => { event.stopPropagation(); handleToggle(); }}
+    title="Remove from favorites"
+  >
+    <i class="fa-solid fa-heart text-pink-500"></i>
+  </button>
+{:else}
+  <button
+    class="text-gray-400 hover:text-pink-500"
+    on:click={(event) => { event.stopPropagation(); handleToggle(); }}
+    title="Add to favorites"
+  >
+    <i class="fa-regular fa-heart"></i>
+  </button>
+{/if}
+
         </div>
 
         <!-- Edit Button (Visible only if the current user is the event creator) -->
@@ -264,6 +277,9 @@ class={`group relative p-[1px] rounded-2xl bg-gradient-to-tr from-purple-500 via
   </div>
 {/if}
 
+
+
+
 <style>
   @keyframes heart-pulse {
     0% {
@@ -277,7 +293,27 @@ class={`group relative p-[1px] rounded-2xl bg-gradient-to-tr from-purple-500 via
     }
   }
 
+  @keyframes heart-unlike {
+    0% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(0.6);
+      opacity: 0.5;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 0;
+    }
+  }
+
   .heart-icon {
     animation: heart-pulse 0.6s ease-in-out;
   }
+
+  .unlike-animation {
+    animation: heart-unlike 0.4s ease-in-out forwards;
+  }
 </style>
+
