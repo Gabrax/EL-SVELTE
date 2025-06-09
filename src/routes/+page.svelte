@@ -17,6 +17,8 @@
     venue: string;
     isFavorite: boolean;
     video_link?: string;
+    attendeesCount: number; 
+    attendeesLimit: number; 
   };
 
   let events: Event[] = [];
@@ -27,6 +29,7 @@
   let selectedConferenceId: number | null = null;
   let childEvents: Event[] = [];
   let showChildModal = false;
+
 let newChildEvent = {
   title: "",
   description: "",
@@ -100,11 +103,9 @@ async function addChildEvent() {
       .from('conferences')
       .select(`
         *,
-        subevents:conferences(
-          id
-        )
+        subevents:conferences(id)
       `)
-      .is('parent_id', null); // pobieraj tylko główne konferencje (jeśli masz parent_id)
+      .is('parent_id', null); // only main conferences
 
     if (error) {
       console.error("Error fetching events:", error.message);
@@ -127,6 +128,21 @@ async function addChildEvent() {
       }
     }
 
+    const { data: attendeesRaw, error: attendeesError } = await supabase
+      .from('conference_participants')
+      .select('conference_id');
+
+    if (attendeesError) {
+      console.error("Error fetching attendees count:", attendeesError.message);
+    }
+
+    const attendeesMap = new Map<number, number>();
+    attendeesRaw?.forEach(row => {
+      const confId = row.conference_id;
+      attendeesMap.set(confId, (attendeesMap.get(confId) ?? 0) + 1);
+    });
+
+    // 🔄 Build final event list
     events = data.map(e => ({
       id: e.id,
       user_id: e.user_id,
@@ -138,19 +154,23 @@ async function addChildEvent() {
       venue: e.venue,
       isFavorite: favoriteIds.includes(e.id),
       subevents_count: e.subevents?.length ?? 0,
+      attendeesCount: attendeesMap.get(e.id) ?? 0,
+      attendeesLimit: e.max_places,
     }));
 
-    //sprawdzanie, czy wydarzenie jest starsze niż 14 dni
-    //jeśli tak, to nie pokazuj go w liście wydarzeń
+    // Filter out events older than 14 days
     const now = new Date();
     events = events.filter(event => {
       const endDate = new Date(event.end_date);
       const diffInDays = (now.getTime() - endDate.getTime()) / (1000 * 60 * 60 * 24);
       return diffInDays <= 14;
     });
-    
-    //sortuj wydarzenia po dacie rozpoczęcia
-    events.sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime() || new Date(a.end_date).getTime() - new Date(b.end_date).getTime()); 
+
+    // Sort events by start_date (and end_date as tie-breaker)
+    events.sort((a, b) =>
+      new Date(a.start_date).getTime() - new Date(b.start_date).getTime() ||
+      new Date(a.end_date).getTime() - new Date(b.end_date).getTime()
+    );
   }
 
   async function fetchChildEvents(conferenceId: number) {

@@ -9,6 +9,8 @@
     location: string;
     venue: string;
     isFavorite: boolean;
+    attendeesCount: number; // na razie na sztywno, później można podmienić
+    attendeesLimit: number; // na razie na sztywno, później można podmienić
   };
 
   export let subevents_count: number;
@@ -22,8 +24,6 @@
 
   let isModalOpen = false;
   let updatedEvent = { ...event };
-  let attendeesCount = 15; // na razie na sztywno, później można podmienić
-  let attendeesLimit = 30; // na razie na sztywno, później można podmienić
 
   // Format date
   function formatDateTime(dateString: string): string {
@@ -150,7 +150,7 @@ class={`group relative p-[1px] rounded-2xl bg-gradient-to-tr from-purple-500 via
     </div>
 
     <!-- New: Attendees Count (podmienić ilość uczestników) --> 
-    <p class="text-sm text-gray-300 mt-4">Zapisani uczestnicy: {attendeesCount}/{attendeesLimit}</p>
+    <p class="text-sm text-gray-300 mt-4">Zapisani uczestnicy: {event.attendeesCount}/{event.attendeesLimit}</p>
 
     <!-- Event Description -->
     <p class="text-gray-400 mt-4 line-clamp-2">
