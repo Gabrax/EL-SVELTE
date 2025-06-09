@@ -203,10 +203,12 @@ async function addChildEvent() {
 
 
   function convertToEmbedUrl(url: string): string {
-    const regex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^&]+)/;
-    const shortRegex = /(?:https?:\/\/)?youtu\.be\/([^?]+)/;
+    url = url.trim();
 
-    let match = url.match(regex) || url.match(shortRegex);
+    const regex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^&]+)/;
+    const shortRegex = /(?:https?:\/\/)?youtu\.be\/([^?&]+)/;
+
+    const match = url.match(regex) || url.match(shortRegex);
     return match ? `https://www.youtube.com/embed/${match[1]}` : url;
   }
 
@@ -297,26 +299,29 @@ async function deleteChildEvent(childEventId: number) {
   };
 
   async function addEvent() {
-
- //if (!newEvent.title && !newEvent.start_date || !newEvent.end_date || !newEvent.location || !newEvent.venue) {
+    //if (!newEvent.title || !newEvent.start_date || !newEvent.end_date || !newEvent.location || !newEvent.venue) {
+    //  console.warn("Missing required event fields.");
     //  return;
     //}
 
     const userId = session.user.id;
-    
-    const embedUrl = newEvent.video_link ? convertToEmbedUrl(newEvent.video_link) : null;
+
+    // Clean and convert video link only if it’s a non-empty string
+    const videoInput = newEvent.video_link?.trim();
+    const embedUrl = videoInput ? convertToEmbedUrl(videoInput) : null;
+    console.log(embedUrl);
 
     const { error } = await supabase.from('conferences').insert([
       {
-        user_id: userId, 
+        user_id: userId,
         title: newEvent.title,
         description: newEvent.description,
         start_date: newEvent.start_date,
         end_date: newEvent.end_date,
         location: newEvent.location,
         venue: newEvent.venue,
-        video_link: embedUrl
-      }
+        video_link: newEvent.embedUrl,
+      },
     ]);
 
     if (error) {
@@ -326,6 +331,7 @@ async function deleteChildEvent(childEventId: number) {
 
     await fetchEvents();
 
+    // Reset form
     newEvent = {
       id: 0,
       user_id: 0,
@@ -336,7 +342,7 @@ async function deleteChildEvent(childEventId: number) {
       location: "",
       venue: "",
       isFavorite: false,
-      video_link: ""
+      video_link: "",
     };
   }
 
